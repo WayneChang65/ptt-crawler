@@ -19,10 +19,10 @@ I just create a simple ptt crawler module by javascript and share it to everyone
 * 爬資料時，可選擇是否忽略**置底文**。
 * 爬的資料以單一帖發文為單位，其中包含該帖的超連結、推文數、主題、作者名稱、發文日期以及是否被標記(Mark)等。
 
-## 如何使用？ (How to use it ?)
+## 如何在您的專案使用？ (How to use it in your project ?)
 * 從Github下載ptt-crawler.js專案程式碼。  
 ```
-git clone https://github.com/WayneChang65/ptt-crawler.js.git ptt-crawler
+git clone https://github.com/WayneChang65/ptt-crawler.js.git
 ```
 * 在您的專案環境中，下載[puppeteer](https://github.com/GoogleChrome/puppeteer)模組。
 ```
@@ -33,15 +33,11 @@ npm install puppeteer --save
 
 * 接下來，用**async函式**包含三行程式就搞定了。
 ```javascript
-const PTT_BOARD = 'ToS'; // 要爬的版名. e.g. 'ToS', 'RealmOfValor', 'PokemonGO', ...
-const PAGES = 3;         // 要爬幾頁. e.g. 這裏設定爬 3 頁
-const SKIP_BOTTOMPOSTS = true; // 忽略置底文
-
 // *** Initialize *** 
-await ptt_crawler.initialize(PTT_BOARD);
+await ptt_crawler.initialize();
 
 // *** GetResult  ***
-let ptt = await ptt_crawler.getResults(PAGES, SKIP_BOTTOMPOSTS);
+let ptt = await ptt_crawler.getResults('ToS', 3, true); // 爬 ToS版, 爬 3頁, 去掉置底文
 
 // *** Close      ***
 await ptt_crawler.close();
@@ -52,9 +48,28 @@ await ptt_crawler.close();
 { titles[], urls[], rates[], authors[], dates[], marks[] }
 ```
 
+## 如何跑範例程式？ (How to run the example ?)
+
+* 從Github下載ptt-crawler.js專案程式碼。  
+```
+git clone https://github.com/WayneChang65/ptt-crawler.js.git
+```
+* 進入ptt-crawler.js專案目錄
+```
+cd ptt-crawler.js
+```
+* 下載跑範例程式所需要的環境組件
+```
+npm install
+```
+* 執行範例程式
+```
+node index.js
+```
+
 ## 基本函式 (Base Methods)
 * initialize(): 初始化物件。
-* getResults(): 開始爬資料。
+* getResults(board, pages, skipBPs): 開始爬資料，board: 欲爬的ptt版名，pages: 要爬幾頁，skipBPs: 是否忽略置底文。
 * close(): 關閉物件。
 
 ## 參考網站 (Reference)
