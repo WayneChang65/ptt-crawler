@@ -8,13 +8,13 @@ async function main(){
     await ptt_crawler.initialize();
 
     // *** GetResult  ***
-    let ptt = await ptt_crawler.getResults('ToS', 3, true); // 爬 ToS版, 爬 3頁, 去掉置底文
+    let ptt = await ptt_crawler.getResults('ToS', 3, true, false); // 爬 ToS版, 爬 3頁, 去掉置底文, 不爬內文
     consoleOut(ptt_crawler, ptt);
 
-    ptt = await ptt_crawler.getResults('RealmOfValor', 2, false); // 爬 RealmOfValor版, 爬 2頁, 留下置底文
+    ptt = await ptt_crawler.getResults('RealmOfValor', 2, false, true); // 爬 RealmOfValor版, 爬 2頁, 留下置底文, 爬內文
     consoleOut(ptt_crawler, ptt);
 
-    ptt = await ptt_crawler.getResults('PokemonGO', 1, true); // 爬 PokemonGO版, 爬 1頁, 去掉置底文
+    ptt = await ptt_crawler.getResults('PokemonGO', 3, true, true); // 爬 PokemonGO版, 爬 1頁, 去掉置底文, 爬內文
     consoleOut(ptt_crawler, ptt);
 
     // *** Close      ***
@@ -35,5 +35,8 @@ function consoleOut(ptt_crawler, ptt) {
             ptt.rates[i] + ' 推 -   ' + ptt.titles[i] + '       - 日期:' + ptt.dates[i] +
             ' -   ' + ptt.authors[i] + ' -    ' + ptt.marks[i] + ' - ' + ptt.urls[i]
         );
+        if (Array.isArray(ptt.contents)) {
+            console.log((ptt.contents[i].length > 9) ? ptt.contents[i].substring(0, 9) + '...' : ptt.contents[i]);
+        }
     }
 }

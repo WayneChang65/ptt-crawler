@@ -18,6 +18,7 @@ I just create a simple ptt crawler module by javascript and share it to everyone
 * 可以爬多頁資料。
 * 爬資料時，可選擇是否忽略**置底文**。
 * 爬的資料以單一帖發文為單位，其中包含該帖的超連結、推文數、主題、作者名稱、發文日期以及是否被標記(Mark)等。
+* 針對發文，可選擇是否要爬**所有內文(含留言)**。
 
 ## 如何在您的專案使用？ (How to use it in your project ?)
 * 從Github下載ptt-crawler.js專案程式碼。  
@@ -37,7 +38,7 @@ npm install puppeteer --save
 await ptt_crawler.initialize();
 
 // *** GetResult  ***
-let ptt = await ptt_crawler.getResults('ToS', 3, true); // 爬 ToS版, 爬 3頁, 去掉置底文
+let ptt = await ptt_crawler.getResults('ToS', 3, true, true); // 爬 ToS版, 爬 3頁, 去掉置底文, 要爬內文
 
 // *** Close      ***
 await ptt_crawler.close();
@@ -45,7 +46,7 @@ await ptt_crawler.close();
 
 * 爬完的資料會透過函式 getResults() 回傳一個物件，裏面各陣列放著爬完的資料，結構如下：
 ```javascript
-{ titles[], urls[], rates[], authors[], dates[], marks[] }
+{ titles[], urls[], rates[], authors[], dates[], marks[], contents[] }
 ```
 
 ## 如何跑範例程式？ (How to run the example ?)
@@ -69,7 +70,7 @@ node index.js
 
 ## 基本函式 (Base Methods)
 * initialize(): 初始化物件。
-* getResults(board, pages, skipBPs): 開始爬資料，board: 欲爬的ptt版名，pages: 要爬幾頁，skipBPs: 是否忽略置底文。
+* getResults(board, pages, skipBPs, getContents): 開始爬資料。board: 欲爬的ptt版名，pages: 要爬幾頁，skipBPs: 是否忽略置底文，getContents: 是否爬內文(會花費較多時間)。
 * close(): 關閉物件。
 
 ## 參考網站 (Reference)
