@@ -30,7 +30,7 @@ async function main(){
         pages: 3,
         skipPBs: true,
         getContents: true
-    }); // 爬 PokemonGO版, 爬 1頁, 去掉置底文, 爬內文
+    }); // 爬 PokemonGO版, 爬 3頁, 去掉置底文, 爬內文
     consoleOut(ptt_crawler, ptt);
 
     // *** Close      ***

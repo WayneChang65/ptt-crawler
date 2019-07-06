@@ -1,27 +1,35 @@
 {
-  "name": "ptt-crawler.js",
-  "version": "1.0.0",
-  "description": "ptt-crawler.js is a web crawler module designed to scarp data from Ptt.",
+  "name": "@waynechang65/ptt-crawler",
+  "version": "2.0.1",
+  "description": "A web crawler module designed to scarp data from Ptt.",
   "main": "index.js",
+  "files": [
+    "index.js",
+    "lib/**"
+  ],
   "directories": {
     "lib": "lib"
   },
   "scripts": {
+    "start": "node examples/demo.js", 
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/WayneChang65/ptt-crawler.js.git"
+    "url": "git+https://github.com/WayneChang65/ptt-crawler.git"
   },
   "keywords": [
-    "ptt"
+    "ptt",
+    "crawler",
+    "spider",
+    "scrape"
   ],
   "author": "WayneChang65",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/WayneChang65/ptt-crawler.js/issues"
+    "url": "https://github.com/WayneChang65/ptt-crawler/issues"
   },
-  "homepage": "https://github.com/WayneChang65/ptt-crawler.js#readme",
+  "homepage": "https://github.com/WayneChang65/ptt-crawler#readme",
   "dependencies": {
     "puppeteer": "^1.14.0"
   }
