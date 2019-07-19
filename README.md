@@ -1,3 +1,7 @@
+[![npm](https://img.shields.io/npm/v/@waynechang65/ptt-crawler.svg)](https://www.npmjs.com/package/@waynechang65/ptt-crawler)
+[![npm](https://img.shields.io/npm/dm/@waynechang65/ptt-crawler.svg)](https://www.npmjs.com/package/@waynechang65/ptt-crawler)
+[![Build Status](https://travis-ci.org/WayneChang65/ptt-crawler.svg?branch=master)](https://travis-ci.org/WayneChang65/ptt-crawler)
+[![GitHub](https://img.shields.io/github/license/waynechang65/ptt-crawler.svg)](https://github.com/WayneChang65/ptt-crawler/)
 # ptt-crawler
 ptt-crawler 是一個專門用來爬[批踢踢(Ptt)](https://www.ptt.cc/index.html)各版資料的爬蟲模組。  
   
