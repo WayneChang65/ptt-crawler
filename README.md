@@ -19,14 +19,14 @@ I just create a simple ptt crawler module by javascript and share it to everyone
 
 ## 這個爬蟲模組能做什麼事？ (What can it do ?)
 * 爬[批踢踢(Ptt)](https://www.ptt.cc/index.html)任意**非18禁**的版上資料  
-* 可以爬多頁資料  
-* 爬資料時，可選擇是否忽略**置底文**  
-* 爬的資料以單一帖發文為單位，其中包含該帖的超連結、推文數、主題、作者名稱、發文日期以及是否被標記(Mark)等  
-* 針對發文，可選擇是否要爬**所有內文(含留言)**  
-
 * Scarping posts of any board on [Ptt](https://www.ptt.cc/index.html) except **adult only** boards
-* Support to scrape pages in one time  
+* 可以爬多頁資料  
+* Support to scrape pages in one time 
+* 爬資料時，可選擇是否忽略**置底文**  
+* Support to skip **fixed bottom posts**
+* 爬的資料以單一帖發文為單位，其中包含該帖的超連結、推文數、主題、作者名稱、發文日期以及是否被標記(Mark)等  
 * Scraped posts contain hyperlinks, likes, titles, authors, dates and the status of posts(like be marked...)  
+* 針對發文，可選擇是否要爬**所有內文(含留言)**  
 * All of the scraped data are optional  
 
 ## 如何在您的專案使用？ (How to use it in your project ?)
@@ -88,10 +88,10 @@ npm start
 ## 基本函式 (Base Methods)
 * initialize(): 初始化物件, initialize ptt-crawler object  
 * getResults(options): 開始爬資料, scrape data  
->> options.board: 欲爬的ptt版名, board name of ptt  
->> options.pages: 要爬幾頁, pages  
->> options.skipBPs: 是否忽略置底文, skip fix bottom posts  
->> options.getContents: 是否爬內文(會花費較多時間), scrape contents  
+> options.board: 欲爬的ptt版名, board name of ptt  
+> options.pages: 要爬幾頁, pages  
+> options.skipBPs: 是否忽略置底文, skip fix bottom posts  
+> options.getContents: 是否爬內文(會花費較多時間), scrape contents  
 * close(): 關閉物件, close ptt-crawler object  
 
 ## 參考網站 (Reference)
