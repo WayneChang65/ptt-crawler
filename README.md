@@ -19,30 +19,30 @@ I just create a simple ptt crawler module by javascript and share it to everyone
 
 ## 這個爬蟲模組能做什麼事？ (What can it do ?)
 * 爬[批踢踢(Ptt)](https://www.ptt.cc/index.html)任意**非18禁**的版上資料  
-* Scarping posts of any board on [Ptt](https://www.ptt.cc/index.html) except **adult only** boards
+Scarping posts of any board on [Ptt](https://www.ptt.cc/index.html) except **adult only** boards
 * 可以爬多頁資料  
-* Support to scrape pages in one time 
+Support to scrape pages in one time 
 * 爬資料時，可選擇是否忽略**置底文**  
-* Support to skip **fixed bottom posts**
+Support to skip **fixed bottom posts**
 * 爬的資料以單一帖發文為單位，其中包含該帖的超連結、推文數、主題、作者名稱、發文日期以及是否被標記(Mark)等  
-* Scraped posts contain hyperlinks, likes, titles, authors, dates and the status of posts(like be marked...)  
+Scraped posts contain hyperlinks, likes, titles, authors, dates and the status of posts(like be marked...)  
 * 針對發文，可選擇是否要爬**所有內文(含留言)**  
-* All of the scraped data are optional  
+All of the scraped data are optional  
 
 ## 如何在您的專案使用？ (How to use it in your project ?)
 * 利用 npm 套件進行下載  
-* Use npm to install
+Use npm to install
 ```
 npm install --save @waynechang65/ptt-crawler
 ```
-* 在您的專案環境中，引用 @waynechang65/ptt-crawler模組。
-* Include @waynechang65/ptt-crawler package in your project
+* 在您的專案環境中，引用 @waynechang65/ptt-crawler模組。  
+Include @waynechang65/ptt-crawler package in your project
 ```javascript
 const ptt_crawler = require('@waynechang65/ptt-crawler');
 ```
 
-* 接下來，用**async函式**包含下面幾行程式就搞定了。
-* Add programs below in an **async function** in your project
+* 接下來，用**async函式**包含下面幾行程式就搞定了。  
+Add programs below in an **async function** in your project
 ```javascript
 // *** Initialize *** 
 await ptt_crawler.initialize();
@@ -59,28 +59,28 @@ let ptt = await ptt_crawler.getResults({
 await ptt_crawler.close();
 ```
 
-* 爬完的資料會透過函式 getResults() 回傳一個物件，裏面各陣列放著爬完的資料，結構如下：
-* Scraped data will be returned with an object by getResults() function, it shows below.
+* 爬完的資料會透過函式 getResults() 回傳一個物件，裏面各陣列放著爬完的資料，結構如下：  
+Scraped data will be returned with an object by getResults() function, it shows below.
 ```javascript
 { titles[], urls[], rates[], authors[], dates[], marks[], contents[] }
 ```
 
 ## 如何跑範例程式？ (How to run the example ?)
 
-* 從GitHub下載ptt-crawler專案程式
-* Clone ptt-crawler from GitHub
+* 從GitHub下載ptt-crawler專案程式  
+Clone ptt-crawler from GitHub
 ```
 git clone https://github.com/WayneChang65/ptt-crawler.git
 ```
 
-* 在ptt-crawler專案環境中，下載必要模組。
-* Install dependencies in the cloned ptt-crawler folder
+* 在ptt-crawler專案環境中，下載必要模組。  
+Install dependencies in the cloned ptt-crawler folder
 ```
 npm install
 ```
 
-* 透過 npm 直接使用以下指令。(實際範例程式在 ./examples/demo.js) 
-* Run it with npm. (the demo example is in ./examples/demo.js)
+* 透過 npm 直接使用以下指令。(實際範例程式在 ./examples/demo.js)  
+Run it with npm. (the demo example is in ./examples/demo.js)
 ```
 npm start
 ```
