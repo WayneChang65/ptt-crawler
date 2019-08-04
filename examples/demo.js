@@ -3,6 +3,7 @@ const ptt_crawler = require('../index.js');
 main();
 
 async function main(){
+	let board, pages;
 
 	// *** Initialize *** 
 	await ptt_crawler.initialize();
@@ -10,28 +11,31 @@ async function main(){
 	// *** GetResult  ***
 	let ptt;
 	ptt = await ptt_crawler.getResults(); // Default Options
-	consoleOut(ptt_crawler, ptt);
+	consoleOut('Tos', 1, ptt);
 
+	pages = 3;
 	ptt = await ptt_crawler.getResults({
-		pages: 3,
+		pages: pages,
 		skipPBs: true
 	}); // 爬 ToS版, 爬 3頁, 去除置底文, 不爬內文
-	consoleOut(ptt_crawler, ptt);
+	consoleOut('Tos', pages, ptt);
 
+	board = 'RealmOfValor', pages = 2;
 	ptt = await ptt_crawler.getResults({
-		board: 'RealmOfValor',
-		pages: 2,
+		board: board,
+		pages: pages,
 		getContents: true
 	}); // 爬 RealmOfValor版, 爬 2頁, 留下置底文, 爬內文
-	consoleOut(ptt_crawler, ptt);
+	consoleOut(board, pages, ptt);
 
+	board = 'PokemonGO', pages = 3;
 	ptt = await ptt_crawler.getResults({
-		board: 'PokemonGO',
-		pages: 3,
+		board: board,
+		pages: pages,
 		skipPBs: true,
 		getContents: true
 	}); // 爬 PokemonGO版, 爬 3頁, 去掉置底文, 爬內文
-	consoleOut(ptt_crawler, ptt);
+	consoleOut(board, pages, ptt);
 
 	// *** Close      ***
 	await ptt_crawler.close();
@@ -40,10 +44,10 @@ async function main(){
 //////////////////////////////////////////
 ///           Console Out              ///
 ////////////////////////////////////////// 
-function consoleOut(ptt_crawler, ptt) {
+function consoleOut(_scrapingBoard, _scrapingPages, ptt) {	
 	console.log('-----------------------------');
-	console.log('Board Name = ' + ptt_crawler.scrapingBoard);
-	console.log('ScrapingPages = ' + ptt_crawler.scrapingPages);
+	console.log('Board Name = ' + _scrapingBoard);
+	console.log('ScrapingPages = ' + _scrapingPages);
 	console.log('Total Items = ' + ptt.titles.length + '\n-----------------------------');
 
 	for (let i = 0; i < ptt.titles.length; i++) {
