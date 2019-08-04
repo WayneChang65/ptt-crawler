@@ -12,7 +12,8 @@
   },
   "scripts": {
     "start": "node examples/demo.js",
-    "test": "jest --detectOpenHandles"
+    "test": "jest --detectOpenHandles",
+    "lint": "eslint lib/*.js && eslint examples/*.js && eslint test/*.js"
   },
   "repository": {
     "type": "git",
@@ -34,6 +35,7 @@
     "puppeteer": "^1.14.0"
   },
   "devDependencies": {
+    "eslint": "^6.1.0",
     "jest": "^24.8.0"
   }
 }
