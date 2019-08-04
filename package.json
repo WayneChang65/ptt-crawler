@@ -1,6 +1,6 @@
 {
   "name": "@waynechang65/ptt-crawler",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "A web crawler module designed to scarp data from Ptt.",
   "main": "index.js",
   "files": [
