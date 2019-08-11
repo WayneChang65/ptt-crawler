@@ -1,6 +1,6 @@
 {
   "name": "@waynechang65/ptt-crawler",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "A web crawler module designed to scarp data from Ptt.",
   "main": "index.js",
   "files": [
@@ -12,7 +12,8 @@
   },
   "scripts": {
     "start": "node examples/demo.js",
-    "test": "jest --detectOpenHandles"
+    "test": "jest --detectOpenHandles",
+    "lint": "eslint index.js lib/**/*.js test/**/*.js examples/**/*.js"
   },
   "repository": {
     "type": "git",
@@ -34,6 +35,7 @@
     "puppeteer": "^1.14.0"
   },
   "devDependencies": {
+    "eslint": "^6.1.0",
     "jest": "^24.8.0"
   }
 }
