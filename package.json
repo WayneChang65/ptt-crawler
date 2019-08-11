@@ -13,7 +13,7 @@
   "scripts": {
     "start": "node examples/demo.js",
     "test": "jest --detectOpenHandles",
-    "lint": "eslint lib/*.js && eslint examples/*.js && eslint test/*.js"
+    "lint": "eslint index.js lib/**/*.js test/**/*.js examples/**/*.js"
   },
   "repository": {
     "type": "git",

@@ -85,6 +85,9 @@ Run it with npm. (the demo example is in ./examples/demo.js)
 npm start
 ```
 
+![image](https://raw.githubusercontent.com/WayneChang65/ptt-crawler/master/img/demo_result_1.png)  
+![image](https://raw.githubusercontent.com/WayneChang65/ptt-crawler/master/img/demo_result_2.png)  
+
 ## 基本函式 (Base Methods)
 * initialize(): 初始化物件, initialize ptt-crawler object  
 * getResults(options): 開始爬資料, scrape data  
