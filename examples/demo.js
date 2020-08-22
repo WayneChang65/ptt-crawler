@@ -20,12 +20,12 @@ async function main(){
 	}); // 爬 ToS版, 爬 3頁, 去除置底文, 不爬內文
 	consoleOut('Tos', pages, ptt);
 
-	board = 'RealmOfValor', pages = 2;
+	board = 'ArenaOfValor', pages = 2;
 	ptt = await ptt_crawler.getResults({
 		board: board,
 		pages: pages,
 		getContents: true
-	}); // 爬 RealmOfValor版, 爬 2頁, 留下置底文, 爬內文
+	}); // 爬 ArenaOfValor版, 爬 2頁, 留下置底文, 爬內文
 	consoleOut(board, pages, ptt);
 
 	board = 'PokemonGO', pages = 3;
