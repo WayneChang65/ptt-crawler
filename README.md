@@ -18,8 +18,8 @@ In order to scrape data from [Ptt](https://www.ptt.cc/index.html) by Node.js,
 I just create a simple ptt crawler module by javascript and share it to everyone to use.
 
 ## 這個爬蟲模組能做什麼事？ (What can it do ?)
-* 爬[批踢踢(Ptt)](https://www.ptt.cc/index.html)任意**非18禁**的版上資料  
-Scarping posts of any board on [Ptt](https://www.ptt.cc/index.html) except **adult only** boards
+* 爬[批踢踢(Ptt)](https://www.ptt.cc/index.html)任意的版上資料  
+Scarping posts of any board on [Ptt](https://www.ptt.cc/index.html) boards
 * 可以爬多頁資料  
 Support to scrape pages in one time 
 * 爬資料時，可選擇是否忽略**置底文**  
