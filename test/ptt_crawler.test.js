@@ -31,4 +31,4 @@ test('2. Test for scraping "PokemonGo" board with 2 pages and containing content
 	expect(ptt.dates).toBeDefined();
 	expect(ptt.marks).toBeDefined();
 	expect(ptt.contents).toBeDefined();
-}, 180000); // 3 minutes
+}, 5 * 60000); // 5 minutes
