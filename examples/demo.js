@@ -16,7 +16,7 @@ async function main(){
 	pages = 3;
 	ptt = await ptt_crawler.getResults({
 		pages: pages,
-		skipPBs: true
+		skipBPs: true
 	}); // 爬 ToS版, 爬 3頁, 去除置底文, 不爬內文
 	consoleOut('Tos', pages, ptt);
 
@@ -32,7 +32,7 @@ async function main(){
 	ptt = await ptt_crawler.getResults({
 		board: board,
 		pages: pages,
-		skipPBs: true,
+		skipBPs: true,
 		getContents: true
 	}); // 爬 sex版, 爬 1頁, 去掉置底文, 爬內文 (18禁版)
 	consoleOut(board, pages, ptt);
