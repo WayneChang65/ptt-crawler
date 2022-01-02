@@ -19,7 +19,7 @@ test('2. Test for scraping "PokemonGo" board with 2 pages and containing content
 	let ptt = await ptt_crawler.getResults({
 		board: 'PokemonGO',
 		pages: 2,
-		skipBPs: true,
+		skipPBs: true,
 		getContents: true
 	}); // scraping "PokemonGo" board, 2 pages, skip bottom fixed posts, scraping contents of posts
 	

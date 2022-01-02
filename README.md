@@ -52,7 +52,7 @@ await ptt_crawler.initialize();
 let ptt = await ptt_crawler.getResults({
     board: 'PokemonGO',
     pages: 3,
-    skipBPs: true,
+    skipPBs: true,
     getContents: true
 }); // Ptt PokemonGO board, 3 pages, skip fixed bottom posts, scrape content of posts
 
