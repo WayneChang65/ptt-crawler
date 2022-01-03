@@ -94,7 +94,7 @@ npm start
 * getResults(options): 開始爬資料, scrape data  
 > options.board: 欲爬的ptt版名, board name of ptt  
 > options.pages: 要爬幾頁, pages  
-> options.skipBPs: 是否忽略置底文, skip fix bottom posts  
+> options.skipPBs: 是否忽略置底文, skip fix bottom posts  
 > options.getContents: 是否爬內文(會花費較多時間), scrape contents  
 * close(): 關閉物件, close ptt-crawler object  
 
