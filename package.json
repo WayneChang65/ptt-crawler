@@ -1,6 +1,6 @@
 {
   "name": "@waynechang65/ptt-crawler",
-  "version": "2.5.1",
+  "version": "2.6.0",
   "description": "A web crawler module designed to scarp data from Ptt.",
   "main": "index.js",
   "files": [
@@ -33,7 +33,8 @@
   "homepage": "https://github.com/WayneChang65/ptt-crawler#readme",
   "dependencies": {
     "@waynechang65/fml-consolelog": "^1.1.6",
-    "puppeteer": "^21.9.0"
+    "is-inside-container": "^1.0.0",
+    "puppeteer": "^19.11.1"
   },
   "devDependencies": {
     "eslint": "^8.25.0",
