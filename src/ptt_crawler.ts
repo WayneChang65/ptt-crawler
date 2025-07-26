@@ -12,7 +12,7 @@ let scrapingPages = 1;
 let skipBottomPosts : undefined | boolean = true;
 let this_os = '';
 const stopSelector = '#main-container > div.r-list-container.action-bar-margin.bbs-screen';
-const userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3723.0 Safari/537.36';
+const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
 let getContents : undefined | boolean = false;
 
 interface CrawlerOptions {
@@ -45,7 +45,7 @@ export interface MergedPages {
 async function _initialize(options : LaunchOptions) {
     const chromiumExecutablePath = (isInsideDocker()) 
         ? '/usr/bin/chromium' : '/usr/bin/chromium-browser';
-
+    
     this_os = os.platform();
     fmlog('event_msg', ['PTT-CRAWLER', 'The OS is ' + this_os, 
         isInsideDocker() ? '[ Inside a container ]' : '[ Not inside a container ]']);

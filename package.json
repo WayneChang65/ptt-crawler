@@ -3,7 +3,7 @@
   "version": "2.7.0",
   "description": "A web crawler module designed to scarp data from Ptt.",
   "type": "module",
-  "main": "index.js",
+  "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist/**"

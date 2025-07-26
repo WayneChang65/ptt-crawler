@@ -1,5 +1,3 @@
-//import * as ptt_crawler from '../index.js';
-//import { MergedPages } from '../ptt_crawler.js';
 const ptt_crawler = require('../../dist/index.js');
 main();
 

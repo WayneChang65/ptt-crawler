@@ -1,5 +1,6 @@
 import * as ptt_crawler from '../index.js';
-import { MergedPages } from '../ptt_crawler.js';
+import { MergedPages } from '../index.js';
+
 main();
 
 async function main(){
