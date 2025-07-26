@@ -62,7 +62,7 @@ async function _initialize(options : LaunchOptions) {
 
     /***** 建立Browser上的 newPage *****/
     page = await browser.newPage();
-    await page.setDefaultNavigationTimeout(180 * 1000); // 3 mins
+    await page.setDefaultNavigationTimeout(180000); // 3 mins
     await page.setRequestInterception(true);
     page.on('request', request => {
         if (request.resourceType() === 'image')
@@ -89,9 +89,12 @@ async function _getResults(options : CrawlerOptions) {
         await page.goto(pttUrl);
         const over18Button = await page.$('.over18-button-container');
         if (over18Button) {
-            over18Button.click();
+            await Promise.all([
+                over18Button.click(),
+                page.waitForNavigation({ waitUntil: 'domcontentloaded' })
+            ]);
         }
-        await page.waitForSelector(stopSelector);
+        await page.waitForSelector(stopSelector, { timeout: 60000 });
     
         data_pages.push(await page.evaluate(_scrapingOnePage, skipBottomPosts));
     
@@ -101,7 +104,7 @@ async function _getResults(options : CrawlerOptions) {
                 const buttonPrePage = document.querySelector<HTMLDivElement>('#action-bar-container > div > div.btn-group.btn-group-paging > a:nth-child(2)');
                 buttonPrePage?.click();
             });
-            await page.waitForSelector(stopSelector);
+            await page.waitForSelector(stopSelector, { timeout: 60000 });
 
             /***** 抓取網頁資料 (上一頁) *****/
             data_pages.push(await page.evaluate(_scrapingOnePage, skipBottomPosts));
@@ -231,7 +234,7 @@ async function _scrapingAllContents(aryHref: string[]) {
     for (let i = 0; i < aryHref.length; i++) {
         try {
             await page.goto(aryHref[i]);
-            await page.waitForSelector(contentSelector);
+            await page.waitForSelector(contentSelector, { timeout: 60000 });
         } catch (e) {
             console.log('<PTT> page.goto ERROR!---_scrapingAllContents', e);
             await browser.close();

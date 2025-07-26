@@ -12,7 +12,7 @@ test('1. Test for default Options ', async () => {
 	expect(ptt.dates).toBeDefined();
 	expect(ptt.marks).toBeDefined();
 	expect(ptt.contents).not.toBeDefined();
-}, 20000);  // 20 seconds
+}, 60000);  // 60 seconds
 
 test('2. Test for scraping "PokemonGo" board with 2 pages and containing contents of posts ' + 
 	'by skipping bottom fixed posts. ', async () => {
