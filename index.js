@@ -1,1 +1,0 @@
-module.exports = require('./lib/ptt_crawler');
