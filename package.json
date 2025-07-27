@@ -1,19 +1,27 @@
 {
   "name": "@waynechang65/ptt-crawler",
-  "version": "2.6.1",
+  "version": "2.7.0",
   "description": "A web crawler module designed to scarp data from Ptt.",
-  "main": "index.js",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "files": [
-    "index.js",
-    "lib/**"
+    "dist/**"
   ],
   "directories": {
-    "lib": "lib"
+    "lib": "dist",
+    "example": "src/examples",
+    "test": "src/test"
   },
   "scripts": {
-    "start": "node examples/demo.js",
-    "test": "jest --detectOpenHandles",
-    "lint": "eslint index.js lib/**/*.js test/**/*.js examples/**/*.js"
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint . --ext .ts",
+    "start": "tsx src/examples/demo.ts",
+    "start-cjs": "node src/examples/demo.cjs",
+    "publish": "npm run build && npm publish"
   },
   "repository": {
     "type": "git",
@@ -32,12 +40,23 @@
   },
   "homepage": "https://github.com/WayneChang65/ptt-crawler#readme",
   "dependencies": {
-    "@waynechang65/fml-consolelog": "^1.1.6",
-    "is-inside-container": "^1.0.0",
-    "puppeteer": "^24.11.2"
+    "@waynechang65/fml-consolelog": "^1.2.2",
+    "puppeteer": "^24.15.0"
   },
   "devDependencies": {
-    "eslint": "^8.25.0",
-    "jest": "^29.2.0"
+    "@types/node": "^24.1.0",
+    "@typescript-eslint/eslint-plugin": "^8.36.0",
+    "@typescript-eslint/parser": "^8.36.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^10.1.5",
+    "prettier": "^3.6.2",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  },
+  "overrides": {
+    "vitest": {
+      "rollup": "npm:@rollup/wasm-node"
+    }
   }
 }

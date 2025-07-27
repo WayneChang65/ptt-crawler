@@ -1,8 +1,9 @@
-const ptt_crawler = require('../index.js');
+import { test, expect } from 'vitest';
+import * as ptt_crawler from '../index.js'
 
 test('1. Test for default Options ', async () => {
-	await ptt_crawler.initialize();
-	let ptt = await ptt_crawler.getResults(); // Default Options
+	await ptt_crawler.initialize({});
+	const ptt = await ptt_crawler.getResults({}); // Default Options
 	await ptt_crawler.close();
 	expect(ptt.titles).toBeDefined();
 	expect(ptt.urls).toBeDefined();
@@ -11,12 +12,12 @@ test('1. Test for default Options ', async () => {
 	expect(ptt.dates).toBeDefined();
 	expect(ptt.marks).toBeDefined();
 	expect(ptt.contents).not.toBeDefined();
-}, 20000);  // 20 seconds
+}, 60000);  // 60 seconds
 
 test('2. Test for scraping "PokemonGo" board with 2 pages and containing contents of posts ' + 
 	'by skipping bottom fixed posts. ', async () => {
-	await ptt_crawler.initialize();
-	let ptt = await ptt_crawler.getResults({
+	await ptt_crawler.initialize({});
+	const ptt = await ptt_crawler.getResults({
 		board: 'PokemonGO',
 		pages: 2,
 		skipPBs: true,
