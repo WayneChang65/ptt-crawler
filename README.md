@@ -1,6 +1,7 @@
 # ptt-crawler
 
 [![npm](https://img.shields.io/npm/v/@waynechang65/ptt-crawler.svg)](https://www.npmjs.com/package/@waynechang65/ptt-crawler)
+[![Node.js CI](https://github.com/WayneChang65/ptt-crawler/actions/workflows/ci.yml/badge.svg)](https://github.com/WayneChang65/ptt-crawler/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/dm/@waynechang65/ptt-crawler.svg)](https://www.npmjs.com/package/@waynechang65/ptt-crawler)
 [![Npm package total downloads](https://badgen.net/npm/dt/@waynechang65/ptt-crawler)](https://npmjs.ccom/package/@waynechang65/ptt-crawler)
 [![GitHub](https://img.shields.io/github/license/waynechang65/ptt-crawler.svg)](https://github.com/WayneChang65/ptt-crawler/)
@@ -46,7 +47,14 @@ npm install --save @waynechang65/ptt-crawler
 Include @waynechang65/ptt-crawler package in your project
 
 ```javascript
+// CommonJS
 const ptt_crawler = require('@waynechang65/ptt-crawler');
+```
+
+```javascript
+// ES Module
+import * as ptt_crawler from '@waynechang65/ptt-crawler';
+import { MergedPages } from '@waynechang65/ptt-crawler'; // ppt的interface (for ts)
 ```
 
 * 接下來，用**async函式**包含下面幾行程式就搞定了。  
@@ -91,11 +99,17 @@ Install dependencies in the cloned ptt-crawler folder
 npm install
 ```
 
-* 透過 npm 直接使用以下指令。(實際範例程式在 ./examples/demo.js)  
-Run it with npm. (the demo example is in ./examples/demo.js)  
+* 透過 npm 直接使用以下指令。(實際範例程式在  ./src/examples/demo.ts or demo.cjs)  
+Run it with npm. (the demo example is in  ./src/examples/demo.ts or demo.cjs)  
 
 ``` bash
-npm start
+// for ts
+npm run start
+```
+
+``` bash
+// for cjs
+npm run start-cjs
 ```
 
 ![image](https://raw.githubusercontent.com/WayneChang65/ptt-crawler/master/img/demo_result_1.png)  
