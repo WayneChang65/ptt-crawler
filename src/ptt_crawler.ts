@@ -5,7 +5,7 @@ import os from 'os';
 import { log as fmlog } from '@waynechang65/fml-consolelog';
 import isInsideDocker from 'is-docker';
 
-let browser : Browser;
+let browser : Browser | undefined;
 let page : Page;
 let scrapingBoard = '';
 let scrapingPages = 1;
@@ -22,7 +22,6 @@ interface CrawlerOptions {
     getContents ?: undefined | boolean
 }
 
-// return ({ aryTitle, aryHref, aryRate, aryAuthor, aryDate, aryMark });
 interface CrawlerOnePage {
     aryTitle ?: string[],
     aryHref ?: string[],
@@ -43,6 +42,9 @@ export interface MergedPages {
 }
 
 async function _initialize(options : LaunchOptions) {
+    if (browser) {
+        return;
+    }
     const chromiumExecutablePath = (isInsideDocker()) 
         ? '/usr/bin/chromium' : '/usr/bin/chromium-browser';
     
@@ -119,10 +121,8 @@ async function _getResults(options : CrawlerOptions) {
         }
         return retObj;
     } catch(e) {
-        console.log('[ptt-crawler] ERROR!---getResults');
-        console.log(e);
-        await browser.close();
-        throw e; // re-throw the error after logging
+        console.log('[ptt-crawler] ERROR!---getResults', e);
+        throw e;
     }
 }
 
@@ -233,11 +233,12 @@ async function _scrapingAllContents(aryHref: string[]) {
     const contentSelector = '#main-content';
     for (let i = 0; i < aryHref.length; i++) {
         try {
-            await page.goto(aryHref[i]);
-            await page.waitForSelector(contentSelector, { timeout: 60000 });
+            if (browser) {
+                await page.goto(aryHref[i]);
+                await page.waitForSelector(contentSelector, { timeout: 60000 });
+            }
         } catch (e) {
             console.log('<PTT> page.goto ERROR!---_scrapingAllContents', e);
-            await browser.close();
         }
         const content = await page.evaluate(()=>{
             const contentSelector = '#main-content';
@@ -251,7 +252,10 @@ async function _scrapingAllContents(aryHref: string[]) {
 }
 
 async function _close() {
-    if (browser) await browser.close();
+    if (browser) {
+        await browser.close();
+        browser = undefined;
+    }
 }
 
 export {
