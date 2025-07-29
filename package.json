@@ -21,7 +21,7 @@
     "lint": "eslint . --ext .ts",
     "start": "tsx src/examples/demo.ts",
     "start-cjs": "node src/examples/demo.cjs",
-    "publish": "npm run build && npm publish"
+    "prepublishOnly": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -41,6 +41,7 @@
   "homepage": "https://github.com/WayneChang65/ptt-crawler#readme",
   "dependencies": {
     "@waynechang65/fml-consolelog": "^1.2.2",
+    "is-docker": "^3.0.0",
     "puppeteer": "^24.15.0"
   },
   "devDependencies": {

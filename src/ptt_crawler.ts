@@ -3,7 +3,7 @@ import { type Browser, type Page } from 'puppeteer';
 import { type LaunchOptions } from 'puppeteer';
 import os from 'os';
 import { log as fmlog } from '@waynechang65/fml-consolelog';
-import { isDocker as isInsideDocker } from './is-docker.js';
+import isInsideDocker from 'is-docker';
 
 let browser : Browser;
 let page : Page;
