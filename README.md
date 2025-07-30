@@ -114,6 +114,7 @@ npm run start-cjs
 
 ![image](https://raw.githubusercontent.com/WayneChang65/ptt-crawler/master/img/demo_result_1.png)  
 ![image](https://raw.githubusercontent.com/WayneChang65/ptt-crawler/master/img/demo_result_2.png)  
+![image](https://raw.githubusercontent.com/WayneChang65/ptt-crawler/master/img/demo_result_3.png)  
 
 ## 基本函式 (Base Methods)
 
