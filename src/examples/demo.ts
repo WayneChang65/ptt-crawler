@@ -75,7 +75,7 @@ function showOneContent(ptt: MergedPages) {
 `
 
 +-----------------內文(其中一則)--------------------
-${ptt.contents?.[9]}
+${ptt.contents?.[0]}
 +-----------------------------------------
 
 `);

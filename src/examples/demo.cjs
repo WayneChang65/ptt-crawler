@@ -1,5 +1,5 @@
 const ptt_crawler = require('../../dist/index.js');
-const fmlog = require('@waynechang65/fml-consolelog').log
+const fmlog = require('@waynechang65/fml-consolelog').log;
 
 main();
 
@@ -14,6 +14,14 @@ async function main() {
         consoleOut('Tos', 1, ptt);
 
         ptt = await ptt_crawler.getResults({
+            board: 'sex',
+            pages: 1,
+            skipPBs: true,
+            getContents: true,
+        }); // 爬 sex版, 爬 1頁, 去掉置底文, 爬內文 (18禁版)
+        consoleOut('sex', 1, ptt);
+
+        ptt = await ptt_crawler.getResults({
             pages: 3,
             skipPBs: true,
         }); // 爬 ToS版, 爬 3頁, 去除置底文, 不爬內文
@@ -25,16 +33,9 @@ async function main() {
             getContents: true,
         }); // 爬 PokemonGO版, 爬 2頁, 留下置底文, 爬內文
         consoleOut('PokemonGO', 2, ptt);
-
-        ptt = await ptt_crawler.getResults({
-            board: 'sex',
-            pages: 1,
-            skipPBs: true,
-            getContents: true,
-        }); // 爬 sex版, 爬 1頁, 去掉置底文, 爬內文 (18禁版)
-        consoleOut('sex', 1, ptt);
+        showOneContent(ptt);
     } catch (error) {
-        console.error('爬蟲執行失敗:', error);
+        console.error('ptt_crawer fail:', error);
     } finally {
         // *** Close      ***
         await ptt_crawler.close();
@@ -44,11 +45,7 @@ async function main() {
 //////////////////////////////////////////
 ///           Console Out              ///
 //////////////////////////////////////////
-function consoleOut(
-    _scrapingBoard,
-    _scrapingPages,
-    ptt
-) {
+function consoleOut(_scrapingBoard, _scrapingPages, ptt) {
     console.log(`
 +-----------------------------------------
   Board Name = ${_scrapingBoard}, 
@@ -66,4 +63,16 @@ function consoleOut(
             `${ptt.authors[i]}`,
         ]);
     }
+}
+
+function showOneContent(ptt) {
+    console.log(
+        `
+
++-----------------內文(其中一則)--------------------
+${ptt.contents?.[0]}
++-----------------------------------------
+
+`
+    );
 }
