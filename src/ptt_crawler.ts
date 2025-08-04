@@ -4,6 +4,8 @@ import { type LaunchOptions } from 'puppeteer';
 import os from 'os';
 import { log as fmlog } from '@waynechang65/fml-consolelog';
 import isInsideDocker from 'is-docker';
+import UserAgent from 'user-agents';
+const stopSelector = '#main-container > div.r-list-container.action-bar-margin.bbs-screen';
 
 let browser : Browser | undefined;
 let page : Page;
@@ -11,8 +13,6 @@ let scrapingBoard = '';
 let scrapingPages = 1;
 let skipBottomPosts : undefined | boolean = true;
 let this_os = '';
-const stopSelector = '#main-container > div.r-list-container.action-bar-margin.bbs-screen';
-const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
 let getContents : undefined | boolean = false;
 
 interface CrawlerOptions {
@@ -72,7 +72,7 @@ async function _initialize(options : LaunchOptions) {
         else
             request.continue();
     });
-    page.setUserAgent(userAgent);
+    page.setUserAgent((new UserAgent).random().toString());
 }
 
 async function _getResults(options : CrawlerOptions) {  
