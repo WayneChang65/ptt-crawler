@@ -1,1 +1,1 @@
-export * from './ptt_crawler.js';
+export { PttCrawler, type CrawlerOptions, type Post } from './ptt_crawler.js';

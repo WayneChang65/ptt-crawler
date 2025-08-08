@@ -45,7 +45,7 @@
   "homepage": "https://github.com/WayneChang65/ptt-crawler#readme",
   "dependencies": {
     "is-docker": "^3.0.0",
-    "puppeteer": "^24.15.0",
+    "puppeteer": "^24.16.0",
     "user-agents": "^1.1.621"
   },
   "devDependencies": {
