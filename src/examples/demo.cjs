@@ -1,16 +1,19 @@
 const ptt_crawler = require('../../dist/index.js');
 const fmlog = require('@waynechang65/fml-consolelog').log;
+const { performance } = require('perf_hooks');
+const prettyMs = require('pretty-ms').default;
 
 main();
 
 async function main() {
+    const startTime = performance.now();
     try {
         // *** Initialize ***
-        await ptt_crawler.initialize({});
+        await ptt_crawler.initialize();
 
         // *** GetResult  ***
         let ptt;
-        ptt = await ptt_crawler.getResults({}); // Default Options
+        ptt = await ptt_crawler.getResults();
         consoleOut('Tos', 1, ptt);
 
         ptt = await ptt_crawler.getResults({
@@ -39,6 +42,8 @@ async function main() {
     } finally {
         // *** Close      ***
         await ptt_crawler.close();
+        const duration = prettyMs(performance.now() - startTime);
+        fmlog('sys_msg', ['Elapsed time:', duration + '\n']);
     }
 }
 
@@ -72,7 +77,6 @@ function showOneContent(ptt) {
 +-----------------內文(其中一則)--------------------
 ${ptt.contents?.[0]}
 +-----------------------------------------
-
 `
     );
 }

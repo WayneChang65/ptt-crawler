@@ -41,7 +41,7 @@ export interface MergedPages {
     contents?: string[];
 }
 
-async function _initialize(options : LaunchOptions) {
+async function _initialize(options : LaunchOptions = {}) {
     if (browser) {
         return;
     }
@@ -54,7 +54,7 @@ async function _initialize(options : LaunchOptions) {
 
     browser = (this_os === 'linux') ?
         await puppeteer.launch(Object.assign({
-            headless: 'new',
+            headless: true,
             executablePath: chromiumExecutablePath,
             args: ['--no-sandbox', '--disable-setuid-sandbox']
         }, options)) :
@@ -75,7 +75,7 @@ async function _initialize(options : LaunchOptions) {
     page.setUserAgent((new UserAgent).random().toString());
 }
 
-async function _getResults(options : CrawlerOptions) {  
+async function _getResults(options : CrawlerOptions = {}) {  
     const data_pages: CrawlerOnePage[] = [];
     //let retObj: MergedPages;
     options = options || {};
