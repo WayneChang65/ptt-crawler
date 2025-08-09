@@ -1,5 +1,4 @@
-import * as ptt_crawler from '../index.js';
-import { MergedPages } from '../index.js';
+import { PttCrawler, MergedPages } from '../index.js';
 import { log as fmlog } from '@waynechang65/fml-consolelog';
 import { performance } from 'perf_hooks';
 import prettyMs from 'pretty-ms';
@@ -8,6 +7,7 @@ main();
 
 async function main() {
     const startTime = performance.now();
+    const ptt_crawler = new PttCrawler();
     try {
         // *** Initialize ***
         await ptt_crawler.initialize();

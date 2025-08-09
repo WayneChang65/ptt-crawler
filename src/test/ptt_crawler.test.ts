@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import puppeteer, { Browser } from 'puppeteer';
-import { initialize, getResults, close } from '../ptt_crawler.js';
+import { PttCrawler } from '../ptt_crawler.js';
 
 // --- Mocking Puppeteer ---
 vi.mock('puppeteer');
@@ -48,13 +48,15 @@ describe('PTT Crawler - Unit Tests with Mocked Puppeteer', () => {
         // 讓 puppeteer.launch 回傳我們的模擬 browser 物件
         vi.mocked(puppeteer.launch).mockResolvedValue(mockBrowser as unknown as Browser);
 
+        const ptt_crawler = new PttCrawler();
+
         // --- Act ---
-        await initialize({});
-        const ptt = await getResults({
+        await ptt_crawler.initialize();
+        const ptt = await ptt_crawler.getResults({
             board: 'Gossiping',
             pages: 1,
         });
-        await close();
+        await ptt_crawler.close();
 
         // --- Assert ---
         // 驗證 puppeteer.launch 是否被呼叫
@@ -90,14 +92,16 @@ describe('PTT Crawler - Unit Tests with Mocked Puppeteer', () => {
         };
         vi.mocked(puppeteer.launch).mockResolvedValue(mockBrowser as unknown as Browser);
 
+        const ptt_crawler = new PttCrawler();
+
         // --- Act & Assert ---
-        await initialize({});
+        await ptt_crawler.initialize();
         await expect(
-            getResults({
+            ptt_crawler.getResults({
                 board: 'Gossiping',
                 pages: 1,
             })
         ).rejects.toThrow('Network error');
-        await close();
+        await ptt_crawler.close();
     });
 });

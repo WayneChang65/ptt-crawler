@@ -1,4 +1,4 @@
-const ptt_crawler = require('../../dist/index.js');
+const { PttCrawler } = require('../../dist/index.js');
 const fmlog = require('@waynechang65/fml-consolelog').log;
 const { performance } = require('perf_hooks');
 const prettyMs = require('pretty-ms').default;
@@ -7,6 +7,7 @@ main();
 
 async function main() {
     const startTime = performance.now();
+    const ptt_crawler = new PttCrawler();
     try {
         // *** Initialize ***
         await ptt_crawler.initialize();

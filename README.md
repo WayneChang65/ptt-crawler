@@ -48,32 +48,41 @@ Include @waynechang65/ptt-crawler package in your project
 
 ```javascript
 // CommonJS
-const ptt_crawler = require('@waynechang65/ptt-crawler');
+const { PttCrawler } = require('@waynechang65/ptt-crawler');
 ```
 
 ```javascript
-// ES Module
-import * as ptt_crawler from '@waynechang65/ptt-crawler';
-import { MergedPages } from '@waynechang65/ptt-crawler'; // ppt的interface (for ts)
+// ES Module (for js)
+import { PttCrawler } from '@waynechang65/ptt-crawler';
+// ES Module (for ts)
+import { PttCrawler, MergedPages } from '@waynechang65/ptt-crawler'; // MergedPages 是爬取結果的 interface (for ts)
 ```
 
 * 接下來，用**async函式**包含下面幾行程式就搞定了。  
 Add programs below in an **async function** in your project
 
 ```javascript
-// *** Initialize *** 
-await ptt_crawler.initialize();
+const ptt_crawler = new PttCrawler();
 
-// *** GetResult  ***
-let ptt = await ptt_crawler.getResults({
-    board: 'PokemonGO',
-    pages: 3,
-    skipPBs: true,
-    getContents: true
-}); // Ptt PokemonGO board, 3 pages, skip fixed bottom posts, scrape content of posts
+try {
+    // *** Initialize *** 
+    await ptt_crawler.initialize();
 
-// *** Close      ***
-await ptt_crawler.close();
+    // *** GetResult  ***
+    let ptt = await ptt_crawler.getResults({
+        board: 'PokemonGO',
+        pages: 3,
+        skipPBs: true,
+        getContents: true
+    }); // Ptt PokemonGO board, 3 pages, skip fixed bottom posts, scrape content of posts
+    console.log(ptt);
+
+} catch (error) {
+    console.error(error);
+} finally {
+    // *** Close      ***
+    await ptt_crawler.close();
+}
 ```
 
 * 爬完的資料會透過函式 getResults() 回傳一個物件，裏面各陣列放著爬完的資料，結構如下：  
@@ -103,12 +112,12 @@ npm install
 Run it with npm. (the demo example is in  ./src/examples/demo.ts or demo.cjs)  
 
 ``` bash
-// for ts
+# for ts
 npm run start
 ```
 
 ``` bash
-// for cjs
+# for cjs
 npm run start-cjs
 ```
 
@@ -116,17 +125,18 @@ npm run start-cjs
 ![image](https://raw.githubusercontent.com/WayneChang65/ptt-crawler/master/img/demo_result_2.png)  
 ![image](https://raw.githubusercontent.com/WayneChang65/ptt-crawler/master/img/demo_result_3.png)  
 
-## 基本函式 (Base Methods)
+## 基本方法 (Base Methods)
 
-* initialize(): 初始化物件, initialize ptt-crawler object  
-* getResults(options): 開始爬資料, scrape data  
+* `new PttCrawler()`: 建立一個爬蟲實例, create a crawler instance.
+* `initialize()`: 初始化爬蟲, initialize the crawler.
+* `getResults(options)`: 開始爬資料, start to scrape data.  
 
->> options.board: 欲爬的ptt版名, board name of ptt  
->> options.pages: 要爬幾頁, pages  
->> options.skipPBs: 是否忽略置底文, skip fix bottom posts  
->> options.getContents: 是否爬內文(會花費較多時間), scrape contents  
+>> `options.board`: 欲爬的ptt版名, board name of ptt  
+>> `options.pages`: 要爬幾頁, pages  
+>> `options.skipPBs`: 是否忽略置底文, skip fix bottom posts  
+>> `options.getContents`: 是否爬內文(會花費較多時間), scrape contents  
 
-* close(): 關閉物件, close ptt-crawler object  
+* `close()`: 關閉爬蟲並釋放資源, close the crawler and release resources.  
 
 ## 參考網站 (Reference)
 
