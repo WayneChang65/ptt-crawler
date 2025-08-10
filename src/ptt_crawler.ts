@@ -9,19 +9,19 @@ import UserAgent from 'user-agents';
 const stopSelector = '#main-container > div.r-list-container.action-bar-margin.bbs-screen';
 
 interface CrawlerOptions {
-    pages?: number,
-    board?: string,
-    skipPBs?: undefined | boolean,
-    getContents?: undefined | boolean
+    pages?: number;
+    board?: string;
+    skipPBs?: undefined | boolean;
+    getContents?: undefined | boolean;
 }
 
 interface CrawlerOnePage {
-    aryTitle?: string[],
-    aryHref?: string[],
-    aryRate?: string[],
-    aryAuthor?: string[],
-    aryDate?: string[],
-    aryMark?: string[]
+    aryTitle?: string[];
+    aryHref?: string[];
+    aryRate?: string[];
+    aryAuthor?: string[];
+    aryDate?: string[];
+    aryMark?: string[];
 }
 
 export interface MergedPages {
@@ -45,41 +45,52 @@ export class PttCrawler {
 
     constructor(private options: LaunchOptions = {}) {}
 
-    async initialize() {
+    async init() {
         if (this.browser) {
             return;
         }
-        const chromiumExecutablePath = (isInsideDocker())
-            ? '/usr/bin/chromium' : '/usr/bin/chromium-browser';
+        const chromiumExecutablePath = isInsideDocker() ? '/usr/bin/chromium' : '/usr/bin/chromium-browser';
 
         this.this_os = os.platform();
-        fmlog('event_msg', ['PTT-CRAWLER', 'The OS is ' + this.this_os,
-            isInsideDocker() ? '[ Inside a container ]' : '[ Not inside a container ]']);
+        fmlog('event_msg', [
+            'PTT-CRAWLER',
+            'The OS is ' + this.this_os,
+            isInsideDocker() ? '[ Inside a container ]' : '[ Not inside a container ]',
+        ]);
 
-        this.browser = (this.this_os === 'linux') ?
-            await puppeteer.launch(Object.assign({
-                headless: true,
-                executablePath: chromiumExecutablePath,
-                args: ['--no-sandbox', '--disable-setuid-sandbox']
-            }, this.options)) :
-            await puppeteer.launch(Object.assign({
-                headless: false
-            }, this.options));
+        this.browser =
+            this.this_os === 'linux'
+                ? await puppeteer.launch(
+                      Object.assign(
+                          {
+                              headless: true,
+                              executablePath: chromiumExecutablePath,
+                              args: ['--no-sandbox', '--disable-setuid-sandbox'],
+                          },
+                          this.options
+                      )
+                  )
+                : await puppeteer.launch(
+                      Object.assign(
+                          {
+                              headless: false,
+                          },
+                          this.options
+                      )
+                  );
 
         /***** 建立Browser上的 newPage *****/
         this.page = await this.browser.newPage();
         await this.page.setDefaultNavigationTimeout(180000); // 3 mins
         await this.page.setRequestInterception(true);
-        this.page.on('request', request => {
-            if (request.resourceType() === 'image')
-                request.abort();
-            else
-                request.continue();
+        this.page.on('request', (request) => {
+            if (request.resourceType() === 'image') request.abort();
+            else request.continue();
         });
-        this.page.setUserAgent((new UserAgent).random().toString());
+        this.page.setUserAgent(new UserAgent().random().toString());
     }
 
-    async getResults(options: CrawlerOptions = {}) {
+    async crawl(options: CrawlerOptions = {}) {
         if (!this.page) {
             throw new Error('Crawler is not initialized. Please call initialize() first.');
         }
@@ -87,7 +98,7 @@ export class PttCrawler {
         options = options || {};
         options.pages = options.pages || 1;
         this.scrapingBoard = options.board || 'Tos';
-        this.scrapingPages = (options.pages < 0) ? 1 : options.pages;
+        this.scrapingPages = options.pages < 0 ? 1 : options.pages;
         this.skipBottomPosts = options.skipPBs && true;
         this.getContents = options.getContents && true;
 
@@ -99,7 +110,9 @@ export class PttCrawler {
             if (over18Button) {
                 await Promise.all([
                     over18Button.click(),
-                    this.page.waitForNavigation({ waitUntil: 'domcontentloaded' })
+                    this.page.waitForNavigation({
+                        waitUntil: 'domcontentloaded',
+                    }),
                 ]);
             }
             await this.page.waitForSelector(stopSelector, { timeout: 60000 });
@@ -109,10 +122,14 @@ export class PttCrawler {
             for (let i = 1; i < this.scrapingPages; i++) {
                 /***** 點選 "上一頁" 到上一頁較舊的資料 *****/
                 await this.page.evaluate(() => {
-                    const buttonPrePage = document.querySelector<HTMLDivElement>('#action-bar-container > div > div.btn-group.btn-group-paging > a:nth-child(2)');
+                    const buttonPrePage = document.querySelector<HTMLDivElement>(
+                        '#action-bar-container > div > div.btn-group.btn-group-paging > a:nth-child(2)'
+                    );
                     buttonPrePage?.click();
                 });
-                await this.page.waitForSelector(stopSelector, { timeout: 60000 });
+                await this.page.waitForSelector(stopSelector, {
+                    timeout: 60000,
+                });
 
                 /***** 抓取網頁資料 (上一頁) *****/
                 data_pages.push(await this.page.evaluate(this._scrapingOnePage, this.skipBottomPosts));
@@ -142,7 +159,8 @@ export class PttCrawler {
 
         /****************************************/
         /***** 抓所有 Title 及 Href          *****/
-        const titleSelectorAll = '#main-container > div.r-list-container.action-bar-margin.bbs-screen > div.r-ent > div.title > a';
+        const titleSelectorAll =
+            '#main-container > div.r-list-container.action-bar-margin.bbs-screen > div.r-ent > div.title > a';
         const nlResultTitleAll = document.querySelectorAll<HTMLAnchorElement>(titleSelectorAll);
         const aryResultTitleAll = Array.from(nlResultTitleAll);
 
@@ -150,12 +168,15 @@ export class PttCrawler {
         /***** 抓置底文                      *****/
         // (從 div.r-list-sep ~ div.r-ent)
         let aryCutOutLength;
-        const titleSelectorCutOut = '#main-container > div.r-list-container.action-bar-margin.bbs-screen > div.r-list-sep ~ div.r-ent';
+        const titleSelectorCutOut =
+            '#main-container > div.r-list-container.action-bar-margin.bbs-screen > div.r-list-sep ~ div.r-ent';
         const nlResultCutOut = document.querySelectorAll<HTMLDivElement>(titleSelectorCutOut);
-        if (skipBPosts) {  // 不顯示置底文
+        if (skipBPosts) {
+            // 不顯示置底文
             // 取得 div.r-list-sep ~ div.r-ent 的項目次數，這是置底，要扣掉。
             aryCutOutLength = Array.from(nlResultCutOut).length;
-        } else {                // 顯示置底文
+        } else {
+            // 顯示置底文
             aryCutOutLength = 0;
         }
 
@@ -166,52 +187,60 @@ export class PttCrawler {
 
         /****************************************/
         /***** 抓所有作者(Author)             ****/
-        const authorSelectorAll = '#main-container > div.r-list-container.action-bar-margin.bbs-screen > div.r-ent div.meta div.author';
+        const authorSelectorAll =
+            '#main-container > div.r-list-container.action-bar-margin.bbs-screen > div.r-ent div.meta div.author';
         const nlAuthorAll = document.querySelectorAll<HTMLDivElement>(authorSelectorAll);
         const aryAuthorAll = Array.from(nlAuthorAll);
 
         //過濾掉 被刪文的 Author 筆數
-        aryAuthor = aryAuthorAll.filter(author => author.innerText !== '-').map(author => author.innerText);
+        aryAuthor = aryAuthorAll.filter((author) => author.innerText !== '-').map((author) => author.innerText);
 
         /****************************************/
         /***** 抓所有發文日期(date)            ****/
-        const dateSelectorAll = '#main-container > div.r-list-container.action-bar-margin.bbs-screen > div.r-ent div.meta div.date';
+        const dateSelectorAll =
+            '#main-container > div.r-list-container.action-bar-margin.bbs-screen > div.r-ent div.meta div.date';
         const nlDateAll = document.querySelectorAll<HTMLDivElement>(dateSelectorAll);
         const aryDateAll = Array.from(nlDateAll);
 
         //過濾掉 被刪文的 date 筆數
-        aryAuthorAll.map(function (item, index, /*array*/) {
+        aryAuthorAll.map(function (item, index /*array*/) {
             if (item.innerText !== '-') aryDate.push(aryDateAll[index].innerText);
         });
 
         /****************************************/
         /***** 抓所有發文標記(mark)            ****/
-        const markSelectorAll = '#main-container > div.r-list-container.action-bar-margin.bbs-screen > div.r-ent div.meta div.mark';
+        const markSelectorAll =
+            '#main-container > div.r-list-container.action-bar-margin.bbs-screen > div.r-ent div.meta div.mark';
         const nlMarkAll = document.querySelectorAll<HTMLDivElement>(markSelectorAll);
         const aryMarkAll = Array.from(nlMarkAll);
 
         //過濾掉 被刪文的 mark 筆數
-        aryAuthorAll.map(function (item, index/*, array*/) {
+        aryAuthorAll.map(function (item, index /*, array*/) {
             if (item.innerText !== '-') aryMark.push(aryMarkAll[index].innerText);
         });
 
         /****************************************/
         /***** 抓所有推文數(Rate)             *****/
-        const rateSelectorAll = '#main-container > div.r-list-container.action-bar-margin.bbs-screen > div.r-ent div.nrec';
+        const rateSelectorAll =
+            '#main-container > div.r-list-container.action-bar-margin.bbs-screen > div.r-ent div.nrec';
         const nlRateAll = document.querySelectorAll<HTMLDivElement>(rateSelectorAll);
         const aryRateAll = Array.from(nlRateAll);
         //過濾掉 被刪文的 rate 筆數
-        aryAuthorAll.map(function (item, index/*, array*/) {
+        aryAuthorAll.map(function (item, index /*, array*/) {
             if (item.innerText !== '-') aryRate.push(aryRateAll[index].innerText);
         });
 
-        return ({ aryTitle, aryHref, aryRate, aryAuthor, aryDate, aryMark });
+        return { aryTitle, aryHref, aryRate, aryAuthor, aryDate, aryMark };
     }
 
     private _mergePages(pages: CrawlerOnePage[]): Promise<MergedPages> {
-        return new Promise((resolve/*, reject*/) => {
-            const aryAllPagesTitle: string[] = [], aryAllPagesUrl: string[] = [], aryAllPagesRate: string[] = [],
-                aryAllPagesAuthor: string[] = [], aryAllPagesDate: string[] = [], aryAllPagesMark: string[] = [];
+        return new Promise((resolve /*, reject*/) => {
+            const aryAllPagesTitle: string[] = [],
+                aryAllPagesUrl: string[] = [],
+                aryAllPagesRate: string[] = [],
+                aryAllPagesAuthor: string[] = [],
+                aryAllPagesDate: string[] = [],
+                aryAllPagesMark: string[] = [];
             for (let i = 0; i < pages.length; i++) {
                 const page = pages[i];
                 const titles = page.aryTitle ?? [];
@@ -244,7 +273,9 @@ export class PttCrawler {
             try {
                 if (this.browser) {
                     await this.page.goto(aryHref[i]);
-                    await this.page.waitForSelector(contentSelector, { timeout: 60000 });
+                    await this.page.waitForSelector(contentSelector, {
+                        timeout: 60000,
+                    });
                 }
             } catch (e) {
                 console.log('<PTT> page.goto ERROR!---_scrapingAllContents', e);
@@ -267,3 +298,36 @@ export class PttCrawler {
         }
     }
 }
+
+let _ptt_crawler: PttCrawler | undefined = undefined;
+
+/**
+ * @deprecated The function is deprecated, use PttCrawler class instead
+ */
+const _initialize = async (options: LaunchOptions = {}) => {
+    if (_ptt_crawler) return;
+    _ptt_crawler = new PttCrawler(options);
+    await _ptt_crawler.init();
+};
+
+/**
+ * @deprecated The function is deprecated, use PttCrawler class instead
+ */
+const _getResults = async (options: CrawlerOptions = {}) => {
+    if (!_ptt_crawler) {
+        throw new Error('Crawler is not initialized. Please call initialize() first.');
+    }
+    return await _ptt_crawler.crawl(options);
+};
+
+/**
+ * @deprecated The function is deprecated, use PttCrawler class instead
+ */
+const _close = async () => {
+    if (_ptt_crawler) {
+        await _ptt_crawler.close();
+        _ptt_crawler = undefined;
+    }
+};
+
+export { _initialize as initialize, _getResults as getResults, _close as close };

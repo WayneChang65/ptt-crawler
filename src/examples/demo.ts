@@ -1,4 +1,5 @@
 import { PttCrawler, MergedPages } from '../index.js';
+import * as ptt_crawler from '../index.js';
 import { log as fmlog } from '@waynechang65/fml-consolelog';
 import { performance } from 'perf_hooks';
 import prettyMs from 'pretty-ms';
@@ -6,18 +7,25 @@ import prettyMs from 'pretty-ms';
 main();
 
 async function main() {
+    await run_oop();
+    await run_mop();
+}
+
+async function run_oop() {
     const startTime = performance.now();
-    const ptt_crawler = new PttCrawler();
+    const crawler1 = new PttCrawler();
+    const crawler2 = new PttCrawler();
     try {
         // *** Initialize ***
-        await ptt_crawler.initialize();
+        await crawler1.init();
+        await crawler2.init();
 
         // *** GetResult  ***
         let ptt: MergedPages;
-        ptt = await ptt_crawler.getResults();
+        ptt = await crawler1.crawl();
         consoleOut('Tos', 1, ptt);
 
-        ptt = await ptt_crawler.getResults({
+        ptt = await crawler1.crawl({
             board: 'sex',
             pages: 1,
             skipPBs: true,
@@ -25,6 +33,32 @@ async function main() {
         }); // 爬 sex版, 爬 1頁, 去掉置底文, 爬內文 (18禁版)
         consoleOut('sex', 1, ptt);
 
+        ptt = await crawler2.crawl({
+            board: 'PokemonGO',
+            pages: 2,
+            getContents: true,
+        }); // 爬 PokemonGO版, 爬 2頁, 留下置底文, 爬內文
+        consoleOut('PokemonGO', 2, ptt);
+        showOneContent(ptt);
+    } catch (error) {
+        console.error('ptt_crawer fail:', error);
+    } finally {
+        // *** Close      ***
+        await crawler1.close();
+        await crawler2.close();
+        const duration = prettyMs(performance.now() - startTime);
+        fmlog('sys_msg', ['Elapsed time:', duration + '\n']);
+    }
+}
+
+async function run_mop() {
+    const startTime = performance.now();
+    try {
+        // *** Initialize ***
+        await ptt_crawler.initialize();
+
+        // *** GetResult  ***
+        let ptt: MergedPages;
         ptt = await ptt_crawler.getResults({
             pages: 3,
             skipPBs: true,
@@ -32,11 +66,11 @@ async function main() {
         consoleOut('Tos', 3, ptt);
 
         ptt = await ptt_crawler.getResults({
-            board: 'PokemonGO',
+            board: 'gossiping',
             pages: 2,
             getContents: true,
-        }); // 爬 PokemonGO版, 爬 2頁, 留下置底文, 爬內文
-        consoleOut('PokemonGO', 2, ptt);
+        }); // 爬 gossiping版, 爬 2頁, 留下置底文, 爬內文
+        consoleOut('Gossiping', 2, ptt);
         showOneContent(ptt);
     } catch (error) {
         console.error('ptt_crawer fail:', error);
@@ -51,11 +85,7 @@ async function main() {
 //////////////////////////////////////////
 ///           Console Out              ///
 //////////////////////////////////////////
-function consoleOut(
-    _scrapingBoard: string,
-    _scrapingPages: number,
-    ptt: MergedPages
-) {
+function consoleOut(_scrapingBoard: string, _scrapingPages: number, ptt: MergedPages) {
     console.log(`
 +-----------------------------------------
   Board Name = ${_scrapingBoard}, 
@@ -66,9 +96,7 @@ function consoleOut(
     for (let i = 0; i < ptt.titles.length; i++) {
         fmlog('basic_msg', [
             ptt.rates[i] ? `${ptt.rates[i]} 推` : '0 推',
-            ptt.marks[i]
-                ? `${ptt.dates[i]} ${ptt.marks[i]}`
-                : `${ptt.dates[i]} -`,
+            ptt.marks[i] ? `${ptt.dates[i]} ${ptt.marks[i]}` : `${ptt.dates[i]} -`,
             `${ptt.titles[i]} - ${ptt.urls[i]}`.substring(0, 42) + '...',
             `${ptt.authors[i]}`,
         ]);
