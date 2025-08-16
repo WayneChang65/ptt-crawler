@@ -60,7 +60,6 @@ export class PttCrawler {
             insideDocker ? '[ Inside a container ]' : '[ Not inside a container ]',
         ]);
 
-        // Allow passing executablePath and headless via options; otherwise use sensible defaults.
         const defaultLaunchOpts: LaunchOptions =
             this.this_os === 'linux'
                 ? {
@@ -77,13 +76,14 @@ export class PttCrawler {
         /***** 建立Browser上的 newPage *****/
         this.page = await this.browser.newPage();
         await this.page.setDefaultNavigationTimeout(180000); // 3 mins
+
         await this.page.setRequestInterception(true);
         this.page.on('request', (request) => {
-            // Block heavy or unnecessary resource types to speed up crawling
             const blocked = ['image', 'font', 'media'];
             if (blocked.includes(request.resourceType())) request.abort();
             else request.continue();
         });
+
         this.page.setUserAgent(new UserAgent().random().toString());
     }
 
@@ -91,15 +91,15 @@ export class PttCrawler {
         if (!this.page) {
             throw new Error('Crawler is not initialized. Please call init() first.');
         }
+        options = options ?? {};
+
         const data_pages: CrawlerOnePage[] = [];
-        options = options || {};
-        // pages default to 1 if missing or invalid
-        const pages = typeof options.pages === 'number' && options.pages > 0 ? Math.floor(options.pages) : 1;
+        const pages = (typeof options.pages === 'number' && options.pages > 0) ? Math.floor(options.pages) : 1;
+        
         this.scrapingBoard = options.board || 'Tos';
         this.scrapingPages = pages;
-        // Preserve existing defaults if option is undefined
-        this.skipBottomPosts = typeof options.skipPBs === 'boolean' ? options.skipPBs : this.skipBottomPosts;
-        this.getContents = typeof options.getContents === 'boolean' ? options.getContents : this.getContents;
+        this.skipBottomPosts = (typeof options.skipPBs === 'boolean') ? options.skipPBs : this.skipBottomPosts;
+        this.getContents = (typeof options.getContents === 'boolean') ? options.getContents : this.getContents;
 
         /***** 前往 ptt要爬的版面並爬取資料(最新頁面) *****/
         const pttUrl = 'https://www.ptt.cc/bbs/' + this.scrapingBoard + '/index.html';
@@ -139,7 +139,7 @@ export class PttCrawler {
 
             /***** 爬各帖內文 *****/
             if (this.getContents) {
-                const concurrency = options.concurrency && options.concurrency > 0 ? options.concurrency : 5;
+                const concurrency = (options.concurrency && options.concurrency > 0) ? options.concurrency : 5;
                 retObj.contents = await this._scrapingAllContents(retObj.urls, concurrency);
             }
             return retObj;
@@ -161,7 +161,9 @@ export class PttCrawler {
         const aryDate: string[] = [];
         const aryMark: string[] = [];
 
-        const container = document.querySelector('#main-container > div.r-list-container.action-bar-margin.bbs-screen');
+        const container = document.querySelector(
+            '#main-container > div.r-list-container.action-bar-margin.bbs-screen'
+        );
         if (!container) {
             return { aryTitle, aryHref, aryRate, aryAuthor, aryDate, aryMark };
         }
@@ -292,7 +294,11 @@ export class PttCrawler {
                         try {
                             await page.close();
                         } catch (e) {
-                            fmlog('warn', ['PTT-CRAWLER', `_scrapingAllContents:page error for ${url}`, String(e)]);
+                            fmlog('warn', [
+                                'PTT-CRAWLER',
+                                `_scrapingAllContents:page error for ${url}`,
+                                String(e),
+                            ]);
                         }
                     }
                 }
