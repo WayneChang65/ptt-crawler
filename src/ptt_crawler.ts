@@ -167,7 +167,7 @@ export class PttCrawler {
         }
 
         const children = Array.from(container.children);
-        let stopCollecting = false;
+        //let stopCollecting = false;
         for (const child of children) {
             if (child.classList.contains('r-list-sep')) {
                 if (skipBPosts) {
@@ -257,6 +257,7 @@ export class PttCrawler {
         const total = aryHref.length;
 
         const worker = async () => {
+            // eslint-disable-next-line no-constant-condition
             while (true) {
                 const current = index++;
                 if (current >= total) break;
@@ -291,7 +292,7 @@ export class PttCrawler {
                         try {
                             await page.close();
                         } catch (e) {
-                            // ignore
+                            fmlog('warn', ['PTT-CRAWLER', `_scrapingAllContents:page error for ${url}`, String(e)]);
                         }
                     }
                 }
