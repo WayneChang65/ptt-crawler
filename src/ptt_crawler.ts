@@ -13,6 +13,7 @@ interface CrawlerOptions {
     board?: string;
     skipPBs?: undefined | boolean;
     getContents?: undefined | boolean;
+    concurrency?: number;
 }
 
 interface CrawlerOnePage {
@@ -39,9 +40,9 @@ export class PttCrawler {
     private page: Page | undefined;
     private scrapingBoard = '';
     private scrapingPages = 1;
-    private skipBottomPosts: undefined | boolean = true;
+    private skipBottomPosts: boolean = true;
     private this_os = '';
-    private getContents: undefined | boolean = false;
+    private getContents: boolean = false;
 
     constructor(private options: LaunchOptions = {}) {}
 
@@ -49,42 +50,38 @@ export class PttCrawler {
         if (this.browser) {
             return;
         }
-        const chromiumExecutablePath = isInsideDocker() ? '/usr/bin/chromium' : '/usr/bin/chromium-browser';
+        const insideDocker = isInsideDocker();
+        const chromiumExecutablePath = insideDocker ? '/usr/bin/chromium' : '/usr/bin/chromium-browser';
 
         this.this_os = os.platform();
         fmlog('event_msg', [
             'PTT-CRAWLER',
             'The OS is ' + this.this_os,
-            isInsideDocker() ? '[ Inside a container ]' : '[ Not inside a container ]',
+            insideDocker ? '[ Inside a container ]' : '[ Not inside a container ]',
         ]);
 
-        this.browser =
+        // Allow passing executablePath and headless via options; otherwise use sensible defaults.
+        const defaultLaunchOpts: LaunchOptions =
             this.this_os === 'linux'
-                ? await puppeteer.launch(
-                      Object.assign(
-                          {
-                              headless: true,
-                              executablePath: chromiumExecutablePath,
-                              args: ['--no-sandbox', '--disable-setuid-sandbox'],
-                          },
-                          this.options
-                      )
-                  )
-                : await puppeteer.launch(
-                      Object.assign(
-                          {
-                              headless: false,
-                          },
-                          this.options
-                      )
-                  );
+                ? {
+                      headless: true,
+                      executablePath: chromiumExecutablePath,
+                      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+                  }
+                : {
+                      headless: false,
+                  };
+
+        this.browser = await puppeteer.launch(Object.assign(defaultLaunchOpts, this.options));
 
         /***** 建立Browser上的 newPage *****/
         this.page = await this.browser.newPage();
         await this.page.setDefaultNavigationTimeout(180000); // 3 mins
         await this.page.setRequestInterception(true);
         this.page.on('request', (request) => {
-            if (request.resourceType() === 'image') request.abort();
+            // Block heavy or unnecessary resource types to speed up crawling
+            const blocked = ['image', 'font', 'media'];
+            if (blocked.includes(request.resourceType())) request.abort();
             else request.continue();
         });
         this.page.setUserAgent(new UserAgent().random().toString());
@@ -92,20 +89,22 @@ export class PttCrawler {
 
     async crawl(options: CrawlerOptions = {}) {
         if (!this.page) {
-            throw new Error('Crawler is not initialized. Please call initialize() first.');
+            throw new Error('Crawler is not initialized. Please call init() first.');
         }
         const data_pages: CrawlerOnePage[] = [];
         options = options || {};
-        options.pages = options.pages || 1;
+        // pages default to 1 if missing or invalid
+        const pages = typeof options.pages === 'number' && options.pages > 0 ? Math.floor(options.pages) : 1;
         this.scrapingBoard = options.board || 'Tos';
-        this.scrapingPages = options.pages < 0 ? 1 : options.pages;
-        this.skipBottomPosts = options.skipPBs && true;
-        this.getContents = options.getContents && true;
+        this.scrapingPages = pages;
+        // Preserve existing defaults if option is undefined
+        this.skipBottomPosts = typeof options.skipPBs === 'boolean' ? options.skipPBs : this.skipBottomPosts;
+        this.getContents = typeof options.getContents === 'boolean' ? options.getContents : this.getContents;
 
         /***** 前往 ptt要爬的版面並爬取資料(最新頁面) *****/
         const pttUrl = 'https://www.ptt.cc/bbs/' + this.scrapingBoard + '/index.html';
         try {
-            await this.page.goto(pttUrl);
+            await this.page.goto(pttUrl, { waitUntil: 'domcontentloaded' });
             const over18Button = await this.page.$('.over18-button-container');
             if (over18Button) {
                 await Promise.all([
@@ -136,159 +135,172 @@ export class PttCrawler {
             }
 
             /***** 將多頁資料 "照實際新舊順序" 合成 1 個物件 *****/
-            const retObj: MergedPages = await this._mergePages(data_pages);
+            const retObj: MergedPages = this._mergePages(data_pages);
 
             /***** 爬各帖內文 *****/
             if (this.getContents) {
-                retObj.contents = await this._scrapingAllContents(retObj.urls);
+                const concurrency = options.concurrency && options.concurrency > 0 ? options.concurrency : 5;
+                retObj.contents = await this._scrapingAllContents(retObj.urls, concurrency);
             }
             return retObj;
         } catch (e) {
-            console.log('[ptt-crawler] ERROR!---getResults', e);
+            fmlog('error', ['PTT-CRAWLER', 'crawl error', String(e)]);
             throw e;
         }
     }
 
+    /**
+     * 將單頁的每篇文章，逐一解析成陣列，採用更穩健的方式：以 .r-ent 為單位抽取欄位。
+     * 若 skipBPosts 為 true，會在遇到 .r-list-sep 時停止收集，避免包含置底文。
+     */
     private _scrapingOnePage(skipBPosts = true /* 濾掉置底文 */): CrawlerOnePage {
         const aryTitle: string[] = [];
         const aryHref: string[] = [];
         const aryRate: string[] = [];
-        let aryAuthor: string[] = [];
+        const aryAuthor: string[] = [];
         const aryDate: string[] = [];
         const aryMark: string[] = [];
 
-        /****************************************/
-        /***** 抓所有 Title 及 Href          *****/
-        const titleSelectorAll =
-            '#main-container > div.r-list-container.action-bar-margin.bbs-screen > div.r-ent > div.title > a';
-        const nlResultTitleAll = document.querySelectorAll<HTMLAnchorElement>(titleSelectorAll);
-        const aryResultTitleAll = Array.from(nlResultTitleAll);
-
-        /****************************************/
-        /***** 抓置底文                      *****/
-        // (從 div.r-list-sep ~ div.r-ent)
-        let aryCutOutLength;
-        const titleSelectorCutOut =
-            '#main-container > div.r-list-container.action-bar-margin.bbs-screen > div.r-list-sep ~ div.r-ent';
-        const nlResultCutOut = document.querySelectorAll<HTMLDivElement>(titleSelectorCutOut);
-        if (skipBPosts) {
-            // 不顯示置底文
-            // 取得 div.r-list-sep ~ div.r-ent 的項目次數，這是置底，要扣掉。
-            aryCutOutLength = Array.from(nlResultCutOut).length;
-        } else {
-            // 顯示置底文
-            aryCutOutLength = 0;
+        const container = document.querySelector('#main-container > div.r-list-container.action-bar-margin.bbs-screen');
+        if (!container) {
+            return { aryTitle, aryHref, aryRate, aryAuthor, aryDate, aryMark };
         }
 
-        for (let i = 0; i < aryResultTitleAll.length - aryCutOutLength; i++) {
-            aryTitle.push(aryResultTitleAll[i].innerText);
-            aryHref.push(aryResultTitleAll[i].href);
+        const children = Array.from(container.children);
+        let stopCollecting = false;
+        for (const child of children) {
+            if (child.classList.contains('r-list-sep')) {
+                if (skipBPosts) {
+                    // Found separator; stop collecting further .r-ent (these are置底文)
+                    break;
+                } else {
+                    // If not skipping bottom posts, continue to collect subsequent .r-ent as well
+                    continue;
+                }
+            }
+            if (!child.classList.contains('r-ent')) {
+                continue;
+            }
+            // child is .r-ent
+            const ent = child as HTMLDivElement;
+            const titleEl = ent.querySelector<HTMLAnchorElement>('div.title > a');
+            if (!titleEl) {
+                // deleted post or no link; push placeholders to keep alignment if desired
+                // We'll skip deleted posts to keep arrays consistent with visible posts.
+                continue;
+            }
+            const title = titleEl.innerText.trim();
+            const href = titleEl.href;
+            const rateEl = ent.querySelector<HTMLDivElement>('div.nrec');
+            const rate = rateEl ? rateEl.innerText.trim() : '';
+            const authorEl = ent.querySelector<HTMLDivElement>('div.meta div.author');
+            const author = authorEl ? authorEl.innerText.trim() : '';
+            const dateEl = ent.querySelector<HTMLDivElement>('div.meta div.date');
+            const date = dateEl ? dateEl.innerText.trim() : '';
+            const markEl = ent.querySelector<HTMLDivElement>('div.meta div.mark');
+            const mark = markEl ? markEl.innerText.trim() : '';
+
+            aryTitle.push(title);
+            aryHref.push(href);
+            aryRate.push(rate);
+            aryAuthor.push(author);
+            aryDate.push(date);
+            aryMark.push(mark);
         }
-
-        /****************************************/
-        /***** 抓所有作者(Author)             ****/
-        const authorSelectorAll =
-            '#main-container > div.r-list-container.action-bar-margin.bbs-screen > div.r-ent div.meta div.author';
-        const nlAuthorAll = document.querySelectorAll<HTMLDivElement>(authorSelectorAll);
-        const aryAuthorAll = Array.from(nlAuthorAll);
-
-        //過濾掉 被刪文的 Author 筆數
-        aryAuthor = aryAuthorAll.filter((author) => author.innerText !== '-').map((author) => author.innerText);
-
-        /****************************************/
-        /***** 抓所有發文日期(date)            ****/
-        const dateSelectorAll =
-            '#main-container > div.r-list-container.action-bar-margin.bbs-screen > div.r-ent div.meta div.date';
-        const nlDateAll = document.querySelectorAll<HTMLDivElement>(dateSelectorAll);
-        const aryDateAll = Array.from(nlDateAll);
-
-        //過濾掉 被刪文的 date 筆數
-        aryAuthorAll.map(function (item, index /*array*/) {
-            if (item.innerText !== '-') aryDate.push(aryDateAll[index].innerText);
-        });
-
-        /****************************************/
-        /***** 抓所有發文標記(mark)            ****/
-        const markSelectorAll =
-            '#main-container > div.r-list-container.action-bar-margin.bbs-screen > div.r-ent div.meta div.mark';
-        const nlMarkAll = document.querySelectorAll<HTMLDivElement>(markSelectorAll);
-        const aryMarkAll = Array.from(nlMarkAll);
-
-        //過濾掉 被刪文的 mark 筆數
-        aryAuthorAll.map(function (item, index /*, array*/) {
-            if (item.innerText !== '-') aryMark.push(aryMarkAll[index].innerText);
-        });
-
-        /****************************************/
-        /***** 抓所有推文數(Rate)             *****/
-        const rateSelectorAll =
-            '#main-container > div.r-list-container.action-bar-margin.bbs-screen > div.r-ent div.nrec';
-        const nlRateAll = document.querySelectorAll<HTMLDivElement>(rateSelectorAll);
-        const aryRateAll = Array.from(nlRateAll);
-        //過濾掉 被刪文的 rate 筆數
-        aryAuthorAll.map(function (item, index /*, array*/) {
-            if (item.innerText !== '-') aryRate.push(aryRateAll[index].innerText);
-        });
 
         return { aryTitle, aryHref, aryRate, aryAuthor, aryDate, aryMark };
     }
 
-    private _mergePages(pages: CrawlerOnePage[]): Promise<MergedPages> {
-        return new Promise((resolve /*, reject*/) => {
-            const aryAllPagesTitle: string[] = [],
-                aryAllPagesUrl: string[] = [],
-                aryAllPagesRate: string[] = [],
-                aryAllPagesAuthor: string[] = [],
-                aryAllPagesDate: string[] = [],
-                aryAllPagesMark: string[] = [];
-            for (let i = 0; i < pages.length; i++) {
-                const page = pages[i];
-                const titles = page.aryTitle ?? [];
-                for (let j = 0; j < titles.length; j++) {
-                    aryAllPagesTitle.push((page.aryTitle ?? [])[titles.length - 1 - j]);
-                    aryAllPagesUrl.push((page.aryHref ?? [])[titles.length - 1 - j]);
-                    aryAllPagesRate.push((page.aryRate ?? [])[titles.length - 1 - j]);
-                    aryAllPagesAuthor.push((page.aryAuthor ?? [])[titles.length - 1 - j]);
-                    aryAllPagesDate.push((page.aryDate ?? [])[titles.length - 1 - j]);
-                    aryAllPagesMark.push((page.aryMark ?? [])[titles.length - 1 - j]);
-                }
+    /**
+     * 將多頁資料合併，保留原有回傳形態，並確保新舊順序正確 (較新的在前)。
+     * 這是同步操作，不需要額外 Promise 包裹。
+     */
+    private _mergePages(pages: CrawlerOnePage[]): MergedPages {
+        const aryAllPagesTitle: string[] = [];
+        const aryAllPagesUrl: string[] = [];
+        const aryAllPagesRate: string[] = [];
+        const aryAllPagesAuthor: string[] = [];
+        const aryAllPagesDate: string[] = [];
+        const aryAllPagesMark: string[] = [];
+        for (let i = 0; i < pages.length; i++) {
+            const page = pages[i];
+            const titles = page.aryTitle ?? [];
+            // push items in reversed order (to keep overall newest -> oldest)
+            for (let j = titles.length - 1; j >= 0; j--) {
+                aryAllPagesTitle.push(page.aryTitle ? page.aryTitle[j] : '');
+                aryAllPagesUrl.push(page.aryHref ? page.aryHref[j] : '');
+                aryAllPagesRate.push(page.aryRate ? page.aryRate[j] : '');
+                aryAllPagesAuthor.push(page.aryAuthor ? page.aryAuthor[j] : '');
+                aryAllPagesDate.push(page.aryDate ? page.aryDate[j] : '');
+                aryAllPagesMark.push(page.aryMark ? page.aryMark[j] : '');
             }
-            const titles = aryAllPagesTitle;
-            const urls = aryAllPagesUrl;
-            const rates = aryAllPagesRate;
-            const authors = aryAllPagesAuthor;
-            const dates = aryAllPagesDate;
-            const marks = aryAllPagesMark;
-            resolve({ titles, urls, rates, authors, dates, marks });
-        });
+        }
+        const titles = aryAllPagesTitle;
+        const urls = aryAllPagesUrl;
+        const rates = aryAllPagesRate;
+        const authors = aryAllPagesAuthor;
+        const dates = aryAllPagesDate;
+        const marks = aryAllPagesMark;
+        return { titles, urls, rates, authors, dates, marks };
     }
 
-    private async _scrapingAllContents(aryHref: string[]) {
-        if (!this.page) {
-            throw new Error('Crawler is not initialized.');
+    /**
+     * 並行抓取所有貼文內文，預設 concurrency 為 5（可由 options 指定）。
+     * 使用多個分頁以提高速度，並在每個分頁上阻擋不必要資源。
+     */
+    private async _scrapingAllContents(aryHref: string[], concurrency = 5): Promise<string[]> {
+        if (!this.browser) {
+            throw new Error('Crawler is not initialized. Please call init() first.');
         }
-        const aryContent = [];
-        const contentSelector = '#main-content';
-        for (let i = 0; i < aryHref.length; i++) {
-            try {
-                if (this.browser) {
-                    await this.page.goto(aryHref[i]);
-                    await this.page.waitForSelector(contentSelector, {
-                        timeout: 60000,
+        const results: string[] = new Array(aryHref.length).fill('');
+        let index = 0;
+        const total = aryHref.length;
+
+        const worker = async () => {
+            while (true) {
+                const current = index++;
+                if (current >= total) break;
+                const url = aryHref[current];
+                let page: Page | undefined;
+                try {
+                    page = await this.browser!.newPage();
+                    await page.setDefaultNavigationTimeout(120000);
+                    await page.setRequestInterception(true);
+                    page.on('request', (req) => {
+                        const blocked = ['image', 'font', 'stylesheet', 'media'];
+                        if (blocked.includes(req.resourceType())) req.abort();
+                        else req.continue();
                     });
+                    await page.setUserAgent(new UserAgent().random().toString());
+                    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+                    // Evaluate safely: return '' when not found
+                    const content = await page.evaluate(() => {
+                        const contentSelector = '#main-content';
+                        const el = document.querySelector<HTMLDivElement>(contentSelector);
+                        if (!el) return '';
+                        // Remove metadata elements (like article-metaline, push, etc.) if desired,
+                        // but for now return innerText trimmed.
+                        return (el.innerText || '').trim();
+                    });
+                    results[current] = content;
+                } catch (e) {
+                    fmlog('warn', ['PTT-CRAWLER', `_scrapingAllContents error for ${url}`, String(e)]);
+                    results[current] = '';
+                } finally {
+                    if (page) {
+                        try {
+                            await page.close();
+                        } catch (e) {
+                            // ignore
+                        }
+                    }
                 }
-            } catch (e) {
-                console.log('<PTT> page.goto ERROR!---_scrapingAllContents', e);
             }
-            const content = await this.page.evaluate(() => {
-                const contentSelector = '#main-content';
-                const nlResultContent = document.querySelectorAll<HTMLDivElement>(contentSelector);
-                const aryResultContent = Array.from(nlResultContent);
-                return aryResultContent[0].innerText;
-            });
-            aryContent.push(content);
-        }
-        return aryContent;
+        };
+
+        const workers = Array.from({ length: Math.min(concurrency, total) }, () => worker());
+        await Promise.all(workers);
+        return results;
     }
 
     async close() {
@@ -315,7 +327,7 @@ const _initialize = async (options: LaunchOptions = {}) => {
  */
 const _getResults = async (options: CrawlerOptions = {}) => {
     if (!_ptt_crawler) {
-        throw new Error('Crawler is not initialized. Please call initialize() first.');
+        throw new Error('Crawler is not initialized. Please call init() first.');
     }
     return await _ptt_crawler.crawl(options);
 };
