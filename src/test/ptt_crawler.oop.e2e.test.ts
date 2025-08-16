@@ -4,8 +4,8 @@ import { PttCrawler } from '../index.js';
 test('1. Test for default Options ', async () => {
     const ptt_crawler = new PttCrawler();
     try {
-        await ptt_crawler.initialize();
-        const ptt = await ptt_crawler.getResults();
+        await ptt_crawler.init();
+        const ptt = await ptt_crawler.crawl();
         expect(ptt.titles).toBeDefined();
         expect(ptt.urls).toBeDefined();
         expect(ptt.rates).toBeDefined();
@@ -22,8 +22,8 @@ test('2. Test for scraping "PokemonGo" board with 2 pages and containing content
     'by skipping bottom fixed posts. ', async () => {
     const ptt_crawler = new PttCrawler();
     try {
-        await ptt_crawler.initialize();
-        const ptt = await ptt_crawler.getResults({
+        await ptt_crawler.init();
+        const ptt = await ptt_crawler.crawl({
             board: 'PokemonGO',
             pages: 2,
             skipPBs: true,
