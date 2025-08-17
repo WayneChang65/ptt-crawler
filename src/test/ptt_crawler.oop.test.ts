@@ -64,7 +64,7 @@ describe('PTT Crawler - Unit Tests with Mocked Puppeteer', () => {
         // 驗證 page.goto 是否帶著正確的 URL 被呼叫
         expect(mockPage.goto).toHaveBeenCalledWith(
             'https://www.ptt.cc/bbs/Gossiping/index.html',
-            { waitUntil: 'domcontentloaded' }
+            { waitUntil: 'domcontentloaded', timeout: 60000 }
         );
         // 驗證 browser.close 是否被呼叫
         expect(mockBrowser.close).toHaveBeenCalledTimes(1);

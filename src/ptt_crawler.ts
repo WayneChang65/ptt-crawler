@@ -78,10 +78,10 @@ export class PttCrawler {
         await this.page.setDefaultNavigationTimeout(180000); // 3 mins
 
         await this.page.setRequestInterception(true);
-        this.page.on('request', (request) => {
+        this.page.on('request', (req) => {
             const blocked = ['image', 'font', 'media'];
-            if (blocked.includes(request.resourceType())) request.abort();
-            else request.continue();
+            if (blocked.includes(req.resourceType())) req.abort();
+            else req.continue();
         });
 
         this.page.setUserAgent(new UserAgent().random().toString());
@@ -104,7 +104,7 @@ export class PttCrawler {
         /***** 前往 ptt要爬的版面並爬取資料(最新頁面) *****/
         const pttUrl = 'https://www.ptt.cc/bbs/' + this.scrapingBoard + '/index.html';
         try {
-            await this.page.goto(pttUrl, { waitUntil: 'domcontentloaded' });
+            await this.page.goto(pttUrl, { waitUntil: 'domcontentloaded' ,timeout: 60000 });
             const over18Button = await this.page.$('.over18-button-container');
             if (over18Button) {
                 await Promise.all([
@@ -169,11 +169,10 @@ export class PttCrawler {
         }
 
         const children = Array.from(container.children);
-        //let stopCollecting = false;
         for (const child of children) {
             if (child.classList.contains('r-list-sep')) {
                 if (skipBPosts) {
-                    // Found separator; stop collecting further .r-ent (these are置底文)
+                    // Found separator; stop collecting further .r-ent (these are 置底文)
                     break;
                 } else {
                     // If not skipping bottom posts, continue to collect subsequent .r-ent as well
@@ -213,10 +212,7 @@ export class PttCrawler {
         return { aryTitle, aryHref, aryRate, aryAuthor, aryDate, aryMark };
     }
 
-    /**
-     * 將多頁資料合併，保留原有回傳形態，並確保新舊順序正確 (較新的在前)。
-     * 這是同步操作，不需要額外 Promise 包裹。
-     */
+    // 將多頁資料合併，保留原有回傳形態，並確保新舊順序正確 (較新的在前)。
     private _mergePages(pages: CrawlerOnePage[]): MergedPages {
         const aryAllPagesTitle: string[] = [];
         const aryAllPagesUrl: string[] = [];
@@ -267,7 +263,8 @@ export class PttCrawler {
                 let page: Page | undefined;
                 try {
                     page = await this.browser!.newPage();
-                    await page.setDefaultNavigationTimeout(120000);
+                    await page.setDefaultNavigationTimeout(180000); // 3 mins
+
                     await page.setRequestInterception(true);
                     page.on('request', (req) => {
                         const blocked = ['image', 'font', 'stylesheet', 'media'];
@@ -275,14 +272,14 @@ export class PttCrawler {
                         else req.continue();
                     });
                     await page.setUserAgent(new UserAgent().random().toString());
+
                     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
-                    // Evaluate safely: return '' when not found
+                    
                     const content = await page.evaluate(() => {
                         const contentSelector = '#main-content';
                         const el = document.querySelector<HTMLDivElement>(contentSelector);
                         if (!el) return '';
-                        // Remove metadata elements (like article-metaline, push, etc.) if desired,
-                        // but for now return innerText trimmed.
+
                         return (el.innerText || '').trim();
                     });
                     results[current] = content;
