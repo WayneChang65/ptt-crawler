@@ -1,10 +1,12 @@
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-extra';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import { type Browser, type Page } from 'puppeteer';
 import { type LaunchOptions } from 'puppeteer';
 import os from 'os';
 import { log as fmlog } from '@waynechang65/fml-consolelog';
 import isInsideDocker from 'is-docker';
-import UserAgent from 'user-agents';
+
+puppeteer.use(StealthPlugin());
 
 const stopSelector = '#main-container > div.r-list-container.action-bar-margin.bbs-screen';
 
@@ -37,7 +39,7 @@ export interface MergedPages {
 
 export class PttCrawler {
     private browser: Browser | undefined;
-    private page: Page | undefined;
+    private page!: Page;
     private scrapingBoard = '';
     private scrapingPages = 1;
     private skipBottomPosts: boolean = true;
@@ -50,41 +52,44 @@ export class PttCrawler {
         if (this.browser) {
             return;
         }
-        const insideDocker = isInsideDocker();
-        const chromiumExecutablePath = insideDocker ? '/usr/bin/chromium' : '/usr/bin/chromium-browser';
+        try {
+            const insideDocker = isInsideDocker();
+            const chromiumExecutablePath = insideDocker ? '/usr/bin/chromium' : '/usr/bin/chromium-browser';
 
-        this.this_os = os.platform();
-        fmlog('event_msg', [
-            'PTT-CRAWLER',
-            'The OS is ' + this.this_os,
-            insideDocker ? '[ Inside a container ]' : '[ Not inside a container ]',
-        ]);
+            this.this_os = os.platform();
+            fmlog('event_msg', [
+                'PTT-CRAWLER',
+                'The OS is ' + this.this_os,
+                insideDocker ? '[ Inside a container ]' : '[ Not inside a container ]',
+            ]);
 
-        const defaultLaunchOpts: LaunchOptions =
-            this.this_os === 'linux'
-                ? {
-                      headless: true,
-                      executablePath: chromiumExecutablePath,
-                      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-                  }
-                : {
-                      headless: false,
-                  };
+            const defaultLaunchOpts: LaunchOptions =
+                this.this_os === 'linux'
+                    ? {
+                          headless: true,
+                          executablePath: chromiumExecutablePath,
+                          args: ['--no-sandbox', '--disable-setuid-sandbox'],
+                      }
+                    : {
+                          headless: false,
+                      };
 
-        this.browser = await puppeteer.launch(Object.assign(defaultLaunchOpts, this.options));
+            this.browser = await puppeteer.launch(Object.assign(defaultLaunchOpts, this.options));
 
-        /***** 建立Browser上的 newPage *****/
-        this.page = await this.browser.newPage();
-        await this.page.setDefaultNavigationTimeout(180000); // 3 mins
+            /***** 建立Browser上的 newPage *****/
+            this.page = await this.browser.newPage();
+            await this.page.setDefaultNavigationTimeout(180000); // 3 mins
 
-        await this.page.setRequestInterception(true);
-        this.page.on('request', (req) => {
-            const blocked = ['image', 'font', 'media'];
-            if (blocked.includes(req.resourceType())) req.abort();
-            else req.continue();
-        });
-
-        this.page.setUserAgent(new UserAgent().random().toString());
+            await this.page.setRequestInterception(true);
+            this.page.on('request', (req) => {
+                const blocked = ['image', 'font', 'media'];
+                if (blocked.includes(req.resourceType())) req.abort();
+                else req.continue();
+            });
+        } catch (e) {
+            fmlog('error', ['PTT-CRAWLER', 'init error', String(e)]);
+            throw e;
+        }
     }
 
     async crawl(options: CrawlerOptions = {}) {
@@ -271,7 +276,6 @@ export class PttCrawler {
                         if (blocked.includes(req.resourceType())) req.abort();
                         else req.continue();
                     });
-                    await page.setUserAgent(new UserAgent().random().toString());
 
                     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
                     

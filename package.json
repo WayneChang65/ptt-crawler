@@ -16,7 +16,7 @@
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist",
-    "test": "vitest run src/test/ptt_crawler.???.test.ts",
+    "test": "vitest run src/test/ptt_crawler.???.mock.test.ts",
     "test:e2e": "vitest run src/test/ptt_crawler.???.e2e.test.ts",
     "test:all": "vitest run",
     "test:watch": "vitest",
@@ -46,7 +46,8 @@
   "dependencies": {
     "is-docker": "^3.0.0",
     "puppeteer": "^24.15.0",
-    "user-agents": "^1.1.621"
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
   },
   "devDependencies": {
     "@types/node": "^24.1.0",
