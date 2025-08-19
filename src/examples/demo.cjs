@@ -6,6 +6,17 @@ const prettyMs = require('pretty-ms').default;
 
 main();
 
+/*
+Basically, the higher the concurrency setting, the more parallel processing 
+will be used for data crawling. In theory, this should improve efficiency 
+and shorten the completion time. However, if the concurrency value is set 
+too high and the computer’s processing power is limited, efficiency may 
+not improve significantly and memory consumption could increase instead. 
+Therefore, this value should be adjusted based on the available system 
+resources. The current default setting is 5.
+*/
+const CONCURRENCY = 3;
+
 async function main() {
     await run_oop();
     await run_mop();
@@ -37,6 +48,7 @@ async function run_oop() {
             board: 'PokemonGO',
             pages: 2,
             getContents: true,
+            concurrency: CONCURRENCY
         }); // 爬 PokemonGO版, 爬 2頁, 留下置底文, 爬內文
         consoleOut('PokemonGO', 2, ptt);
         showOneContent(ptt);
