@@ -6,11 +6,11 @@
 [![Npm package total downloads](https://badgen.net/npm/dt/@waynechang65/ptt-crawler)](https://npmjs.ccom/package/@waynechang65/ptt-crawler)
 [![GitHub](https://img.shields.io/github/license/waynechang65/ptt-crawler.svg)](https://github.com/WayneChang65/ptt-crawler/)
 
-ptt-crawler 是一個專門用來爬[批踢踢(Ptt)](https://www.ptt.cc/index.html)各版資料的爬蟲模組。  
+`ptt-crawler` 是一個專門用來爬[批踢踢(Ptt)](https://www.ptt.cc/index.html)各版資料的爬蟲模組。  
   
-ptt-crawler is a web crawler module designed to scarpe data from [Ptt](https://www.ptt.cc/index.html).
+`ptt-crawler` is a web crawler module designed to scarpe data from [Ptt](https://www.ptt.cc/index.html).
 
-## 前言(Overview)
+## 前言 (Overview)
 
 [批踢踢(Ptt)](https://www.ptt.cc/index.html)是台灣最大的BBS(Bulletin Board System)，也是許多台灣大數據分析常參考的資料庫。
 不過，大多數Ptt爬蟲都是用python程式所寫。
@@ -62,18 +62,19 @@ import { PttCrawler, MergedPages } from '@waynechang65/ptt-crawler'; // MergedPa
 Add programs below in an **async function** in your project
 
 ```javascript
-const ptt_crawler = new PttCrawler();
+const pttCrawler = new PttCrawler();
 
 try {
     // *** Initialize *** 
-    await ptt_crawler.initialize();
+    await pttCrawler.init();
 
-    // *** GetResult  ***
-    let ptt = await ptt_crawler.getResults({
+    // *** Crawl  ***
+    const ptt = await pttCrawler.crawl({
         board: 'PokemonGO',
         pages: 3,
         skipPBs: true,
-        getContents: true
+        getContents: true,
+        concurrency: 5
     }); // Ptt PokemonGO board, 3 pages, skip fixed bottom posts, scrape content of posts
     console.log(ptt);
 
@@ -81,12 +82,12 @@ try {
     console.error(error);
 } finally {
     // *** Close      ***
-    await ptt_crawler.close();
+    await pttCrawler.close();
 }
 ```
 
-* 爬完的資料會透過函式 getResults() 回傳一個物件，裏面各陣列放著爬完的資料，結構如下：  
-Scraped data will be returned with an object by getResults() function, it shows below.  
+* 爬完的資料會透過函式 `crawl()` 回傳一個物件，裏面各陣列放著爬完的資料，結構如下：  
+Scraped data will be returned with an object by `crawl()` function, it shows below.  
 
 ```javascript
 { titles[], urls[], rates[], authors[], dates[], marks[], contents[] }
@@ -127,16 +128,57 @@ npm run start-cjs
 
 ## 基本方法 (Base Methods)
 
-* `new PttCrawler()`: 建立一個爬蟲實例, create a crawler instance.
-* `initialize()`: 初始化爬蟲, initialize the crawler.
-* `getResults(options)`: 開始爬資料, start to scrape data.  
+* `new PttCrawler()`: 建立一個爬蟲實例 (create a crawler instance).
+* `init()`: 初始化爬蟲 (initialize the crawler).
+* `crawl(options)`: 開始爬資料 (start to scrape data).  
 
->> `options.board`: 欲爬的ptt版名, board name of ptt  
->> `options.pages`: 要爬幾頁, pages  
->> `options.skipPBs`: 是否忽略置底文, skip fix bottom posts  
->> `options.getContents`: 是否爬內文(會花費較多時間), scrape contents  
+>> `options.board`: 欲爬的ptt版名 (board name of ptt).  
+>> `options.pages`: 要爬幾頁 (pages).  
+>> `options.skipPBs`: 是否忽略置底文 (skip fix bottom posts).  
+>> `options.getContents`: 是否爬內文(會花費較多時間) (scrape contents).  
+>> `options.concurrency`: 爬取內文時的並行數量，預設為 5 (concurrency for scraping contents, default is 5).
 
-* `close()`: 關閉爬蟲並釋放資源, close the crawler and release resources.  
+* `close()`: 關閉爬蟲並釋放資源 (close the crawler and release resources).  
+
+## 舊版函式 (Deprecated Functions)
+
+> [!WARNING]
+> 以下函式是為了向後相容而保留，但已不建議使用。它們在未來的版本中可能會被移除。
+> The following functions are kept for backward compatibility but are deprecated. They may be removed in a future release.
+
+為了維持舊版程式的相容性，您仍然可以這樣使用：
+For backward compatibility, you can still use them as follows:
+
+```javascript
+// CommonJS
+const { initialize, getResults, close } = require('@waynechang65/ptt-crawler');
+
+// ES Module
+// import { initialize, getResults, close } from '@waynechang65/ptt-crawler';
+
+async function run() {
+    try {
+        // *** Initialize *** 
+        await initialize();
+
+        // *** GetResult  ***
+        let ptt = await getResults({
+            board: 'PokemonGO',
+            pages: 3,
+            skipPBs: true
+        });
+        console.log(ptt);
+
+    } catch (error) {
+        console.error(error);
+    } finally {
+        // *** Close      ***
+        await close();
+    }
+}
+
+run();
+```
 
 ## 參考網站 (Reference)
 
@@ -145,7 +187,7 @@ npm run start-cjs
 
 ## 貢獻一己之力 (Contribution)
 
-ptt-crawler 雖然是一個小模組，但本人還是希望這個專案能夠持續進步！若有發現臭蟲(bug)或問題，請幫忙在Issue留言告知詳細情形。  
+`ptt-crawler` 雖然是一個小模組，但本人還是希望這個專案能夠持續進步！若有發現臭蟲(bug)或問題，請幫忙在Issue留言告知詳細情形。  
 歡迎共同開發。歡迎Fork / Pull Request，謝謝。:)  
 
-Even though ptt-crawler is a small project, I hope it can be improving. If there is any issue, please comment and welcome to fork and send Pull Request. Thanks. :)
+Even though `ptt-crawler` is a small project, I hope it can be improving. If there is any issue, please comment and welcome to fork and send Pull Request. Thanks. :)
