@@ -66,15 +66,16 @@ const pttCrawler = new PttCrawler();
 
 try {
     // *** Initialize *** 
-    await pttCrawler.init();
+    // concurrency 是設定爬取內文時的並行數量，預設為 5
+    // concurrency is for setting the number of concurrent requests when scraping contents, default is 5.
+    await pttCrawler.init({ concurrency: 5 });
 
     // *** Crawl  ***
     const ptt = await pttCrawler.crawl({
         board: 'PokemonGO',
         pages: 3,
         skipPBs: true,
-        getContents: true,
-        concurrency: 5
+        getContents: true
     }); // Ptt PokemonGO board, 3 pages, skip fixed bottom posts, scrape content of posts
     console.log(ptt);
 
@@ -89,8 +90,18 @@ try {
 * 爬完的資料會透過函式 `crawl()` 回傳一個物件，裏面各陣列放著爬完的資料，結構如下：  
 Scraped data will be returned with an object by `crawl()` function, it shows below.  
 
-```javascript
-{ titles[], urls[], rates[], authors[], dates[], marks[], contents[] }
+```typescript
+// 回傳的物件會實作 MergedPages interface
+// The return value is an object that implements the MergedPages interface.
+interface MergedPages {
+    titles: string[];
+    urls: string[];
+    rates: string[];
+    authors: string[];
+    dates: string[];
+    marks: string[];
+    contents?: string[]; // 只有在 getContents 為 true 時才存在 (Only exists when getContents is true)
+}
 ```
 
 ## 如何跑範例程式？ (How to run the example ?)
@@ -126,18 +137,26 @@ npm run start-cjs
 ![image](https://raw.githubusercontent.com/WayneChang65/ptt-crawler/master/img/demo_result_2.png)  
 ![image](https://raw.githubusercontent.com/WayneChang65/ptt-crawler/master/img/demo_result_3.png)  
 
+## 如何執行測試 (How to run tests)
+
+本專案使用 `vitest` 進行測試。您可以透過以下指令執行測試：  
+This project uses `vitest` for testing. You can run tests with the following command:
+
+```bash
+npm test
+```
+
 ## 基本方法 (Base Methods)
 
 * `new PttCrawler()`: 建立一個爬蟲實例 (create a crawler instance).
-* `init()`: 初始化爬蟲 (initialize the crawler).
+* `init(options)`: 初始化爬蟲 (initialize the crawler).  
+>> `options.concurrency`: 爬取內文時的並行數量，預設為 5 (concurrency for scraping contents, default is 5).  
+>> `options.debug`: 是否開啟除錯模式，預設為 false (enable debug mode, default is false).
 * `crawl(options)`: 開始爬資料 (start to scrape data).  
-
 >> `options.board`: 欲爬的ptt版名 (board name of ptt).  
 >> `options.pages`: 要爬幾頁 (pages).  
 >> `options.skipPBs`: 是否忽略置底文 (skip fix bottom posts).  
 >> `options.getContents`: 是否爬內文(會花費較多時間) (scrape contents).  
->> `options.concurrency`: 爬取內文時的並行數量，預設為 5 (concurrency for scraping contents, default is 5).
-
 * `close()`: 關閉爬蟲並釋放資源 (close the crawler and release resources).  
 
 ## 舊版函式 (Deprecated Functions)

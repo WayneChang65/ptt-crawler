@@ -16,6 +16,7 @@ vi.mock('puppeteer-extra', () => {
         setRequestInterception: vi.fn(),
         on: vi.fn(),
         close: vi.fn().mockResolvedValue(undefined),
+        bringToFront: vi.fn().mockResolvedValue(undefined),
     };
 
     const mockBrowser = {
@@ -198,25 +199,13 @@ describe('PttCrawler - Mock Test', () => {
         });
 
         it('should fetch contents when getContents is true', async () => {
-            const { page, browser } = await getMocks();
+            const { page } = await getMocks();
             
-            // Mock for the main crawl
-            vi.mocked(page.evaluate).mockResolvedValue(mockPage1Data);
-
-            // Mock for _scrapingAllContents
-            const contentPageMock = {
-                goto: vi.fn().mockResolvedValue(undefined),
-                evaluate: vi.fn()
-                    .mockResolvedValueOnce('Content for post2')
-                    .mockResolvedValueOnce('Content for post1'),
-                setDefaultNavigationTimeout: vi.fn(),
-                setRequestInterception: vi.fn(),
-                on: vi.fn(),
-                close: vi.fn().mockResolvedValue(undefined),
-            };
-
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            vi.mocked(browser.newPage).mockResolvedValue(contentPageMock as any);
+            // Mock for the main crawl, and then for the content scraping
+            vi.mocked(page.evaluate)
+                .mockResolvedValueOnce(mockPage1Data) // For the main page list
+                .mockResolvedValueOnce('Content for post2') // For the first content page
+                .mockResolvedValueOnce('Content for post1'); // For the second content page
 
             const result = await crawler.crawl({ board: 'TestBoard', pages: 1, getContents: true });
 
@@ -225,8 +214,9 @@ describe('PttCrawler - Mock Test', () => {
 
             // Note: The order depends on the reversed URLs from the merged result
             expect(result.contents).toEqual(['Content for post2', 'Content for post1']);
-            expect(contentPageMock.goto).toHaveBeenCalledWith('http://ptt.cc/post2', expect.any(Object));
-            expect(contentPageMock.goto).toHaveBeenCalledWith('http://ptt.cc/post1', expect.any(Object));
+            expect(page.goto).toHaveBeenCalledWith('https://www.ptt.cc/bbs/TestBoard/index.html', expect.any(Object));
+            expect(page.goto).toHaveBeenCalledWith('http://ptt.cc/post2', expect.any(Object));
+            expect(page.goto).toHaveBeenCalledWith('http://ptt.cc/post1', expect.any(Object));
         });
     });
 
