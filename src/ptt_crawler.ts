@@ -10,33 +10,64 @@ puppeteer.use(StealthPlugin());
 
 const stopSelector = '#main-container > div.r-list-container.action-bar-margin.bbs-screen';
 
+/**
+ * Options for the PTT crawler.
+ */
 interface CrawlerOptions {
+    /** The number of pages to crawl. */
     pages?: number;
+    /** The name of the board to crawl. */
     board?: string;
+    /** Whether to skip pinned posts (置底文). */
     skipPBs?: undefined | boolean;
+    /** Whether to fetch the content of each post. */
     getContents?: undefined | boolean;
+    /** The number of concurrent requests for fetching post contents. */
     concurrency?: number;
 }
 
+/**
+ * Represents the data scraped from a single page.
+ * @internal
+ */
 interface CrawlerOnePage {
+    /** Array of post titles. */
     aryTitle?: string[];
+    /** Array of post URLs. */
     aryHref?: string[];
+    /** Array of post recommendation counts (rates). */
     aryRate?: string[];
+    /** Array of post authors. */
     aryAuthor?: string[];
+    /** Array of post dates. */
     aryDate?: string[];
+    /** Array of post marks (e.g., 'M', 'S'). */
     aryMark?: string[];
 }
 
+/**
+ * Represents the merged data from multiple crawled pages.
+ */
 export interface MergedPages {
+    /** Array of post titles. */
     titles: string[];
+    /** Array of post URLs. */
     urls: string[];
+    /** Array of post recommendation counts (rates). */
     rates: string[];
+    /** Array of post authors. */
     authors: string[];
+    /** Array of post dates. */
     dates: string[];
+    /** Array of post marks (e.g., 'M', 'S'). */
     marks: string[];
+    /** Array of post contents. Only available if `getContents` is true. */
     contents?: string[];
 }
 
+/**
+ * A class to crawl posts from a PTT board.
+ */
 export class PttCrawler {
     private browser: Browser | undefined;
     private page!: Page;
@@ -46,8 +77,16 @@ export class PttCrawler {
     private this_os = '';
     private getContents: boolean = false;
 
+    /**
+     * Creates an instance of PttCrawler.
+     * @param {LaunchOptions} [options={}] - Puppeteer launch options.
+     */
     constructor(private options: LaunchOptions = {}) {}
 
+    /**
+     * Initializes the crawler, launching a browser instance.
+     * This must be called before any other methods.
+     */
     async init() {
         if (this.browser) {
             return;
@@ -92,6 +131,11 @@ export class PttCrawler {
         }
     }
 
+    /**
+     * Starts the crawling process.
+     * @param {CrawlerOptions} [options={}] - Options for the crawl.
+     * @returns {Promise<MergedPages>} A promise that resolves to the crawled data.
+     */
     async crawl(options: CrawlerOptions = {}) {
         if (!this.page) {
             throw new Error('Crawler is not initialized. Please call init() first.');
@@ -155,8 +199,12 @@ export class PttCrawler {
     }
 
     /**
-     * 將單頁的每篇文章，逐一解析成陣列，採用更穩健的方式：以 .r-ent 為單位抽取欄位。
-     * 若 skipBPosts 為 true，會在遇到 .r-list-sep 時停止收集，避免包含置底文。
+     * Scrapes a single page of posts. This method is executed in the browser context.
+     * It robustly parses each post as a unit (.r-ent).
+     * If skipBPosts is true, it stops collecting when it encounters the separator for pinned posts.
+     * @private
+     * @param {boolean} [skipBPosts=true] - Whether to skip bottom pinned posts.
+     * @returns {CrawlerOnePage} The scraped data from one page.
      */
     private _scrapingOnePage(skipBPosts = true /* 濾掉置底文 */): CrawlerOnePage {
         const aryTitle: string[] = [];
@@ -217,7 +265,12 @@ export class PttCrawler {
         return { aryTitle, aryHref, aryRate, aryAuthor, aryDate, aryMark };
     }
 
-    // 將多頁資料合併，保留原有回傳形態，並確保新舊順序正確 (較新的在前)。
+    /**
+     * Merges data from multiple pages, ensuring the correct chronological order (newest first).
+     * @private
+     * @param {CrawlerOnePage[]} pages - An array of scraped page data.
+     * @returns {MergedPages} The merged data.
+     */
     private _mergePages(pages: CrawlerOnePage[]): MergedPages {
         const aryAllPagesTitle: string[] = [];
         const aryAllPagesUrl: string[] = [];
@@ -248,8 +301,12 @@ export class PttCrawler {
     }
 
     /**
-     * 並行抓取所有貼文內文，預設 concurrency 為 5（可由 options 指定）。
-     * 使用多個分頁以提高速度，並在每個分頁上阻擋不必要資源。
+     * Scrapes the content of all posts concurrently.
+     * Uses multiple pages for speed and blocks unnecessary resources on each page.
+     * @private
+     * @param {string[]} aryHref - An array of post URLs.
+     * @param {number} [concurrency=5] - The number of concurrent requests.
+     * @returns {Promise<string[]>} A promise that resolves to an array of post contents.
      */
     private async _scrapingAllContents(aryHref: string[], concurrency = 5): Promise<string[]> {
         if (!this.browser) {
@@ -311,6 +368,9 @@ export class PttCrawler {
         return results;
     }
 
+    /**
+     * Closes the browser instance.
+     */
     async close() {
         if (this.browser) {
             await this.browser.close();
