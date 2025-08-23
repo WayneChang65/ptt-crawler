@@ -1,4 +1,4 @@
-import { PttCrawler, MergedPages } from '../index.js';
+import { PttCrawler, MergedPages, InitOptions, CrawlerOptions } from '../index.js';
 import * as ptt_crawler from '../index.js';
 import { log as fmlog } from '@waynechang65/fml-consolelog';
 import { performance } from 'perf_hooks';
@@ -15,7 +15,6 @@ not improve significantly and memory consumption could increase instead.
 Therefore, this value should be adjusted based on the available system 
 resources. The current default setting is 5.
 */
-const CONCURRENCY = 3;
 
 async function main() {
     await run_oop();
@@ -24,33 +23,39 @@ async function main() {
 
 async function run_oop() {
     const startTime = performance.now();
+    const initOpt_1: InitOptions = {
+        concurrency: 3
+    }
     const crawler1 = new PttCrawler();
     const crawler2 = new PttCrawler();
     try {
         // *** Initialize ***
-        await crawler1.init();
-        await crawler2.init();
+        await crawler1.init(initOpt_1);
+        await crawler2.init({ concurrency: 10 });
 
         // *** GetResult  ***
         let ptt: MergedPages;
+        let crawlOpt: CrawlerOptions;
+        
         ptt = await crawler1.crawl();
         consoleOut('Tos', 1, ptt);
 
-        ptt = await crawler1.crawl({
+        crawlOpt = {
             board: 'sex',
-            pages: 1,
-            skipPBs: true,
-            getContents: true
-        }); // 爬 sex版, 爬 1頁, 去掉置底文, 爬內文 (18禁版)
-        consoleOut('sex', 1, ptt);
-
-        ptt = await crawler2.crawl({
-            board: 'PokemonGO',
             pages: 2,
+            skipPBs: true,
             getContents: true,
-            concurrency: CONCURRENCY
-        }); // 爬 PokemonGO版, 爬 2頁, 留下置底文, 爬內文
-        consoleOut('PokemonGO', 2, ptt);
+        } // 爬 sex版, 爬 2頁, 去掉置底文, 爬內文 (18禁版)
+        ptt = await crawler1.crawl(crawlOpt); 
+        consoleOut(crawlOpt.board as string, crawlOpt.pages as number, ptt);
+
+        crawlOpt = {
+            board: 'PokemonGO',
+            pages: 30,
+            getContents: true,
+        } // 爬 PokemonGO版, 爬 2頁, 留下置底文, 爬內文
+        ptt = await crawler2.crawl(crawlOpt); 
+        consoleOut(crawlOpt.board as string, crawlOpt.pages as number, ptt);
         showOneContent(ptt);
     } catch (error) {
         console.error('ptt_crawer fail:', error);
