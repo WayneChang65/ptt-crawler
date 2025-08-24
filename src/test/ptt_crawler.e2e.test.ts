@@ -1,41 +1,35 @@
 import { test, expect } from 'vitest';
-import { PttCrawler, type Post } from '../index.js';
+import * as ptt_crawler from '../index.js'
 
-test('1. Test for default options (board=Tos, pages=1)', async () => {
-    const crawler = new PttCrawler({ board: 'Tos' });
-    const posts: Post[] = await crawler.crawl();
-    
-    expect(Array.isArray(posts)).toBe(true);
-    expect(posts.length).toBeGreaterThan(0);
-
-    const post = posts[0];
-    expect(post.title).toBeDefined();
-    expect(post.url).toBeDefined();
-    expect(post.rate).toBeDefined();
-    expect(post.author).toBeDefined();
-    expect(post.date).toBeDefined();
-    expect(post.mark).toBeDefined();
-    expect(post.content).not.toBeDefined();
+test('1. Test for default Options ', async () => {
+	await ptt_crawler.initialize({});
+	const ptt = await ptt_crawler.getResults({}); // Default Options
+	await ptt_crawler.close();
+	expect(ptt.titles).toBeDefined();
+	expect(ptt.urls).toBeDefined();
+	expect(ptt.rates).toBeDefined();
+	expect(ptt.authors).toBeDefined();
+	expect(ptt.dates).toBeDefined();
+	expect(ptt.marks).toBeDefined();
+	expect(ptt.contents).not.toBeDefined();
 }, 60000);  // 60 seconds
 
-test('2. Test for scraping "PokemonGo" board with 2 pages and getting contents', async () => {
-    const crawler = new PttCrawler({
-        board: 'PokemonGO',
-        pages: 2,
-        getContents: true
-    });
-    const posts: Post[] = await crawler.crawl();
-
-    expect(Array.isArray(posts)).toBe(true);
-    expect(posts.length).toBeGreaterThan(0);
-
-    const post = posts[0];
-    expect(post.title).toBeDefined();
-    expect(post.url).toBeDefined();
-    expect(post.rate).toBeDefined();
-    expect(post.author).toBeDefined();
-    expect(post.date).toBeDefined();
-    expect(post.mark).toBeDefined();
-    expect(post.content).toBeDefined();
-    expect(typeof post.content).toBe('string');
+test('2. Test for scraping "PokemonGo" board with 2 pages and containing contents of posts ' + 
+	'by skipping bottom fixed posts. ', async () => {
+	await ptt_crawler.initialize({});
+	const ptt = await ptt_crawler.getResults({
+		board: 'PokemonGO',
+		pages: 2,
+		skipPBs: true,
+		getContents: true
+	}); // scraping "PokemonGo" board, 2 pages, skip bottom fixed posts, scraping contents of posts
+	
+	await ptt_crawler.close();
+	expect(ptt.titles).toBeDefined();
+	expect(ptt.urls).toBeDefined();
+	expect(ptt.rates).toBeDefined();
+	expect(ptt.authors).toBeDefined();
+	expect(ptt.dates).toBeDefined();
+	expect(ptt.marks).toBeDefined();
+	expect(ptt.contents).toBeDefined();
 }, 5 * 60000); // 5 minutes

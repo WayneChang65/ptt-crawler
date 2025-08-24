@@ -1,66 +1,82 @@
-import { PttCrawler, type Post } from '../index.js';
+import * as ptt_crawler from '../index.js';
+import { MergedPages } from '../index.js';
 import { log as fmlog } from '@waynechang65/fml-consolelog';
+
+main();
 
 async function main() {
     try {
-        // --- Crawl Gossiping Board ---
-        const gossipingCrawler = new PttCrawler({
-            board: 'Gossiping',
+        // *** Initialize ***
+        await ptt_crawler.initialize({});
+
+        // *** GetResult  ***
+        let ptt: MergedPages;
+        ptt = await ptt_crawler.getResults({}); // Default Options
+        consoleOut('Tos', 1, ptt);
+
+        ptt = await ptt_crawler.getResults({
+            board: 'sex',
+            pages: 1,
+            skipPBs: true,
+            getContents: true,
+        }); // 爬 sex版, 爬 1頁, 去掉置底文, 爬內文 (18禁版)
+        consoleOut('sex', 1, ptt);
+
+        ptt = await ptt_crawler.getResults({
+            pages: 3,
+            skipPBs: true,
+        }); // 爬 ToS版, 爬 3頁, 去除置底文, 不爬內文
+        consoleOut('Tos', 3, ptt);
+
+        ptt = await ptt_crawler.getResults({
+            board: 'PokemonGO',
             pages: 2,
             getContents: true,
-        });
-        const gossipingPosts = await gossipingCrawler.crawl();
-
-        consoleOut('Gossiping', 2, gossipingPosts);
-        showOneContent(gossipingPosts);
-
-        // --- Crawl Tos Board ---
-        const tosCrawler = new PttCrawler({
-            board: 'Tos',
-            pages: 1,
-            getContents: false, // Do not fetch content
-        });
-        const tosPosts = await tosCrawler.crawl();
-        
-        consoleOut('Tos', 1, tosPosts);
+        }); // 爬 PokemonGO版, 爬 2頁, 留下置底文, 爬內文
+        consoleOut('PokemonGO', 2, ptt);
+        showOneContent(ptt);
     } catch (error) {
-        console.error('Ptt-crawler demo failed:', error);
+        console.error('ptt_crawer fail:', error);
+    } finally {
+        // *** Close      ***
+        await ptt_crawler.close();
     }
 }
-
-main();
 
 //////////////////////////////////////////
 ///           Console Out              ///
 //////////////////////////////////////////
-function consoleOut(scrapingBoard: string, scrapingPages: number, posts: Post[]) {
+function consoleOut(
+    _scrapingBoard: string,
+    _scrapingPages: number,
+    ptt: MergedPages
+) {
     console.log(`
 +-----------------------------------------
-  Board Name = ${scrapingBoard}, 
-  ScrapingPages = ${scrapingPages}, Total Items = ${posts.length}
+  Board Name = ${_scrapingBoard}, 
+  ScrapingPages = ${_scrapingPages}, Total Items = ${ptt.titles.length}
 +-----------------------------------------
         `);
 
-    for (const post of posts) {
+    for (let i = 0; i < ptt.titles.length; i++) {
         fmlog('basic_msg', [
-            post.rate ? `${post.rate} 推` : '0 推',
-            post.mark ? `${post.date} ${post.mark}` : `${post.date} -`,
-            `${post.title} - ${post.url}`.substring(0, 42) + '...',
-            `${post.author}`,
+            ptt.rates[i] ? `${ptt.rates[i]} 推` : '0 推',
+            ptt.marks[i]
+                ? `${ptt.dates[i]} ${ptt.marks[i]}`
+                : `${ptt.dates[i]} -`,
+            `${ptt.titles[i]} - ${ptt.urls[i]}`.substring(0, 42) + '...',
+            `${ptt.authors[i]}`,
         ]);
     }
 }
 
-function showOneContent(posts: Post[]) {
-    if (posts.length > 0 && posts[0].content) {
-        console.log(
-            `
+function showOneContent(ptt: MergedPages) {
+    console.log(
+`
 
 +-----------------內文(其中一則)--------------------
-${posts[0].content}
+${ptt.contents?.[0]}
 +-----------------------------------------
 
-`
-        );
-    }
+`);
 }
