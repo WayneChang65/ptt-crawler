@@ -23,5 +23,8 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# Temp files
+*temp.*
+
 # npm component
 # package-lock.json

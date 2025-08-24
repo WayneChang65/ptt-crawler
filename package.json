@@ -1,6 +1,6 @@
 {
   "name": "@waynechang65/ptt-crawler",
-  "version": "2.7.2",
+  "version": "3.0.0",
   "description": "A web crawler module designed to scarp data from Ptt.",
   "type": "module",
   "main": "dist/index.js",
@@ -16,8 +16,8 @@
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist",
-    "test": "vitest run src/test/ptt_crawler.test.ts",
-    "test:e2e": "vitest run src/test/ptt_crawler.e2e.test.ts",
+    "test": "vitest run src/test/ptt_crawler.???.mock.test.ts",
+    "test:e2e": "vitest run src/test/ptt_crawler.???.e2e.test.ts",
     "test:all": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint . --ext .ts",
@@ -44,17 +44,21 @@
   },
   "homepage": "https://github.com/WayneChang65/ptt-crawler#readme",
   "dependencies": {
+    "@waynechang65/fml-consolelog": "^1.2.2",
     "is-docker": "^3.0.0",
-    "puppeteer": "^24.15.0"
+    "puppeteer": "^24.15.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
   },
   "devDependencies": {
     "@types/node": "^24.1.0",
+    "@types/user-agents": "^1.0.4",
     "@typescript-eslint/eslint-plugin": "^8.36.0",
     "@typescript-eslint/parser": "^8.36.0",
-    "@waynechang65/fml-consolelog": "^1.2.2",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^10.1.5",
     "prettier": "^3.6.2",
+    "pretty-ms": "^9.2.0",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"
