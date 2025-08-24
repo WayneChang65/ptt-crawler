@@ -24,7 +24,8 @@ async function main() {
 async function run_oop() {
     const startTime = performance.now();
     const initOpt_1: InitOptions = {
-        concurrency: 3
+        concurrency: 3,
+        debug: true
     }
     const crawler1 = new PttCrawler();
     const crawler2 = new PttCrawler();
@@ -37,23 +38,26 @@ async function run_oop() {
         let ptt: MergedPages;
         let crawlOpt: CrawlerOptions;
         
+        // 爬 tos 版, 爬 1 頁, 保留置底文, 不爬內文
         ptt = await crawler1.crawl();
         consoleOut('Tos', 1, ptt);
 
+        // 爬 sex 版, 爬 2 頁, 去掉置底文, 爬內文 (18禁版)
         crawlOpt = {
             board: 'sex',
             pages: 2,
             skipPBs: true,
             getContents: true,
-        } // 爬 sex版, 爬 2頁, 去掉置底文, 爬內文 (18禁版)
+        }
         ptt = await crawler1.crawl(crawlOpt); 
         consoleOut(crawlOpt.board as string, crawlOpt.pages as number, ptt);
 
+        // 爬 PokemonGO版, 爬 5 頁, 留下置底文, 爬內文
         crawlOpt = {
             board: 'PokemonGO',
-            pages: 30,
+            pages: 5,
             getContents: true,
-        } // 爬 PokemonGO版, 爬 2頁, 留下置底文, 爬內文
+        } 
         ptt = await crawler2.crawl(crawlOpt); 
         consoleOut(crawlOpt.board as string, crawlOpt.pages as number, ptt);
         showOneContent(ptt);
@@ -76,17 +80,20 @@ async function run_mop() {
 
         // *** GetResult  ***
         let ptt: MergedPages;
+
+        // 爬 ToS 版, 爬 3 頁, 去除置底文, 不爬內文
         ptt = await ptt_crawler.getResults({
             pages: 3,
             skipPBs: true
-        }); // 爬 ToS版, 爬 3頁, 去除置底文, 不爬內文
+        });
         consoleOut('Tos', 3, ptt);
 
+        // 爬 gossiping 版, 爬 2 頁, 留下置底文, 爬內文(18禁)
         ptt = await ptt_crawler.getResults({
             board: 'gossiping',
             pages: 2,
             getContents: true
-        }); // 爬 gossiping版, 爬 2頁, 留下置底文, 爬內文
+        });
         consoleOut('Gossiping', 2, ptt);
         showOneContent(ptt);
     } catch (error) {
