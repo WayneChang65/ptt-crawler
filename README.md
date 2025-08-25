@@ -13,10 +13,10 @@
 ## :heavy_exclamation_mark:注意 (Attention):heavy_exclamation_mark:  
 
 > [!IMPORTANT]
-> :thumbsup: `3.0.0 版本`，利用並發處理，爬取內文效率大增，依照測試結果，**時間可減少90%以上**。[(Benchmark)](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/benchmark.md)  
-`Version 3.0.0`: Utilizes concurrent processing to significantly boost content crawling efficiency, **reducing processing time by over 90% according to our benchmark results**.[(Benchmark)](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/benchmark.md)  
-> :bookmark: `3.0.0 版本`，主要利用「物件導向類別」進行使用，仍保留原本2.x.x的模組函式呼叫介面(如：initialize(), getResults(),...)。但是，**預計在3.1.0以後的版本，把原2.x.x版本函式(Deprecated)刪除，請留意！！！**  
-`Version 3.0.0`: It primarily utilizes an object-oriented class for usage, but still retains the original 2.x.x module function call interfaces (e.g., initialize(), getResults(), etc.). However, these **2.x.x functions are deprecated and are planned for removal in versions 3.1.0 and later. Please take note!**  
+> :thumbsup: `3.0.1 版本`，利用並發處理，爬取內文效率大增，依照測試結果，**時間可減少79%以上**。[(Benchmark)](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/benchmark.md)  
+`Version 3.0.1`: Utilizes concurrent processing to significantly boost content crawling efficiency, **reducing processing time by over 79% according to our benchmark results**.[(Benchmark)](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/benchmark.md)  
+> :bookmark: `3.0.1 版本`，主要利用「物件導向類別」進行使用，仍保留原本2.x.x的模組函式呼叫介面(如：initialize(), getResults(),...)。但是，**預計在3.1.0以後的版本，把原2.x.x版本函式(Deprecated)刪除，請留意！！！**  
+`Version 3.0.1`: It primarily utilizes an object-oriented class for usage, but still retains the original 2.x.x module function call interfaces (e.g., initialize(), getResults(), etc.). However, these **2.x.x functions are deprecated and are planned for removal in versions 3.1.0 and later. Please take note!**  
 
 ## 前言 (Overview)  
 

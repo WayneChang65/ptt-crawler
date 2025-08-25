@@ -1,10 +1,9 @@
 # Benchmark
 
-| 版本     | 特徵 | 測試檔案 | 輸出檔案 | 測試時間 |
-|----------|------|----------|----------|----------|
-| 35dc73d  | 無並發 (w/o Concurrency) | [demo-35dc73d.cjs](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/demo-35dc73d.cjs) | [output-35dc73d.txt](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/output-35dc73d.txt) | 2.5s, 31.4s, **4m42.7s** |
-| 2d92b91  | 有並發，每個 Page 執行單一爬取內文任務 (w/ Concurrency, every single Page deal with single scrape) | [demo-2d92b91.cjs](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/demo-2d92b91.cjs) | [output-2d92b91.txt](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/output-2d92b91.txt) | 3.6s, 20.4s, **1m49.1s** |
-| decae28  | 有並發，Page 重用執行爬取內文任務 (w/ Concurrency, every single Page deal with scrapes) | [demo-decae28.cjs](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/demo-decae28.cjs) | [output-decae28.txt](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/output-decae28.txt) | 3.3s, 6.8s, **22.5s** |
+| 版本     | 特徵 | 測試檔案 | 測試時間 |
+|----------|------|----------|----------|
+| v3.0.1  | 有並發 (w/ Concurrency) | [demo-v3.0.1.cjs](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/demo-v3.0.1.cjs) | 3.4s, 16.9s, **1m34.2s** |
+| v2.7.2  | 無並發 (w/o Concurrency) | [demo-v2.7.2.cjs](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/demo-v2.7.2.cjs) | 4.2s, 1m19.4s, **7m36.9s** |
 
 ## 測試條件 (Test Condition)  
 
