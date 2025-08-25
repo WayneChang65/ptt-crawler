@@ -22,6 +22,7 @@
     "test:watch": "vitest",
     "lint": "eslint . --ext .ts",
     "start": "tsx src/examples/demo.ts",
+    "start-curr": "tsx src/examples/demo_curr.ts",
     "start-cjs": "node src/examples/demo.cjs",
     "prepublishOnly": "npm run build"
   },
