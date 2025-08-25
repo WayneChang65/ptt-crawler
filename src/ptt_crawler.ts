@@ -5,6 +5,7 @@ import { type LaunchOptions } from 'puppeteer';
 import os from 'os';
 import { log as fmlog } from '@waynechang65/fml-consolelog';
 import isInsideDocker from 'is-docker';
+import * as fs from 'fs/promises';
 
 puppeteer.use(StealthPlugin());
 
@@ -28,8 +29,8 @@ export interface CrawlerOptions {
  * Options for the initial of PPT crawler.
  */
 export interface InitOptions {
-    concurrency?: number,
-    debug?: boolean
+    concurrency?: number;
+    debug?: boolean;
 }
 
 /**
@@ -328,42 +329,63 @@ export class PttCrawler {
             throw new Error('Crawler is not initialized. Please call init() first.');
         }
         const results: string[] = new Array(aryHref.length).fill('');
-        let index = 0;
         const total = aryHref.length;
 
-        const worker = async () => {
-            let freePage: { p: Page } | undefined;
-            // eslint-disable-next-line no-constant-condition
-            while (true) {
-                const current = index++;
-                if (current >= total) break;
-                const url = aryHref[current];
-                try {
-                    freePage = this.pages[current];
-                    if (!freePage) break;
+        const worker = async (url: string, page: Page, idxAryHref: number) => {
+            try {
+                await page.bringToFront();
+                await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
 
-                    const page = freePage.p;
-                    await page.bringToFront();
-                    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+                const content = await page.evaluate(() => {
+                    const contentSelector = '#main-content';
+                    const el = document.querySelector<HTMLDivElement>(contentSelector);
+                    if (!el) return '';
 
-                    const content = await page.evaluate(() => {
-                        const contentSelector = '#main-content';
-                        const el = document.querySelector<HTMLDivElement>(contentSelector);
-                        if (!el) return '';
-
-                        return (el.innerText || '').trim();
-                    });
-                    results[current] = content;
-                } catch (e) {
-                    fmlog('warn', ['PTT-CRAWLER', `_scrapingAllContents error for ${url}`, String(e)]);
-                    results[current] = '';
-                }
+                    return (el.innerText || '').trim();
+                });
+                results[idxAryHref] = content;
+            } catch (e) {
+                fmlog('warn', ['PTT-CRAWLER', `_scrapingAllContents error for ${url}`, String(e)]);
             }
         };
 
-        const workers = Array.from({ length: Math.min(concurrency, total) }, () => worker());
-        await Promise.all(workers);
+        const workers = [];
+        let i = 0;
+        while (i * concurrency < aryHref.length) {
+            for (let j = 0; j < concurrency; j++) {
+                if (i * concurrency + j + 1 > aryHref.length) {
+                    break;
+                }
+                const idx = i * concurrency + j;
+                workers.push(worker(aryHref[idx], this.pages[j].p, idx));
+            }
+            await Promise.all(workers);
+            workers.length = 0;
+            i++;
+        }
+
+        if (this.debug) {
+            this._saveObjToFile(results, `results-${total}-${this.scrapingBoard}.json`);
+        }
         return results;
+    }
+    
+    /**
+     * Saves an object to a file as a beautified JSON string.
+     * @private
+     * @param {object} obj - The object to be saved.
+     * @param {string} fileWithPath - The full path and filename for the output file.
+     * @returns {Promise<void>} A promise that resolves once the file is written, or rejects on error.
+     */
+    private async _saveObjToFile(obj: object, fileWithPath: string) {
+        try {
+            const jsonString: string = JSON.stringify(obj, null, 2);
+            await fs.writeFile(fileWithPath, jsonString, 'utf-8');
+
+            console.log(`Save the file successfuly: ${fileWithPath}`);
+        } catch (e) {
+            console.error('Fail to save: ', e);
+        }
     }
 
     /**
