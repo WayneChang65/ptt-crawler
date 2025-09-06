@@ -1,7 +1,9 @@
 
-> @waynechang65/ptt-crawler@3.0.0 start-cjs
+> @waynechang65/ptt-crawler@3.1.0 start-cjs
 > node src/examples/demo.cjs
 
+ PTT-CRAWLER  The OS is linux - [ Not inside a container ]
+ PTT-CRAWLER  The OS is linux - [ Not inside a container ]
 
 +-----------------------------------------
   Board Name = Tos, 
@@ -23,7 +25,7 @@
 <  1 推  > < 8/23 M > [情報] 反叛的革命頌稀有角色潛解.夢魘級夏陸陸 - https://www.ptt...     -[bluelamb]
 < 16 推  > < 8/22 - > [情報] 您要的B稿以上線 （技能上調 - https://www.ptt.cc/b...           -[kinve1014]
 < 21 推  > < 8/21 M > [抽卡] Code Geass 反叛的魯路修 稀有提升 - https://www....             -[maxliao]
- Elapsed time:  4.9s
+ Elapsed time:  3.4s
 
 
 +-----------------------------------------
@@ -57,7 +59,7 @@
 <  0 推  > < 9/04 - > [新聞] 女士官喝醉 海軍少校「幫打蟑螂」進房性 - https://www.ptt...     -[EVEA]
 <  2 推  > < 9/04 - > Re: [閒聊] 吃那個鋅或瑪卡有用嗎？ - https://www.ptt.cc/...            -[bear26]
 < 11 推  > < 9/04 - > [心得] 電動vs手動飛機杯評比 - https://www.ptt.cc/bbs/...              -[skyeeeee]
-< 47 推  > < 9/04 - > [閒聊] 吃那個鋅或瑪卡有用嗎？ - https://www.ptt.cc/bbs/...            -[saucy]
+< 48 推  > < 9/04 - > [閒聊] 吃那個鋅或瑪卡有用嗎？ - https://www.ptt.cc/bbs/...            -[saucy]
 <  4 推  > < 9/04 - > [閒聊] 這個炮是個美麗的錯誤 - https://www.ptt.cc/bbs/s...             -[feifei7098]
 < 12 推  > < 9/04 - > [創作] 朋友的媽媽，說我可以常去她家！ - https://www.ptt.cc/...        -[swallno]
 < 22 推  > < 9/04 - > [討論] 要怎樣才可以一直打炮 - https://www.ptt.cc/bbs/s...             -[Kurosagi5566]
@@ -74,7 +76,7 @@
 <  0 推  > < 9/03 - > [新聞] 引狼入室！請6旬友人照顧母親 9歲女兒兩 - https://www.pt...      -[yokann]
 <  2 推  > < 9/03 - > [創作] 貓咪 - https://www.ptt.cc/bbs/sex/M.175...                     -[lovelydaisy]
 <  1 推  > < 9/03 - > [新聞] 強逼柔弱男同事 套弄出來親胸肌 工地壯男 - https://www.pt...     -[godofsex]
- Elapsed time:  19.4s
+ Elapsed time:  14s
 
 
 +-----------------------------------------
@@ -579,5 +581,5 @@
  09/05 20:23
 +-----------------------------------------
 
- Elapsed time:  1m 42.7s
+ Elapsed time:  1m 25.7s
 
