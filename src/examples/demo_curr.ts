@@ -3,6 +3,8 @@ import { log as fmlog } from '@waynechang65/fml-consolelog';
 import { performance } from 'perf_hooks';
 import prettyMs from 'pretty-ms';
 
+const DEBUG_MODE = true;
+
 (async () => {
     await run_oop();
 })();
@@ -11,13 +13,17 @@ async function run_oop() {
     const startTime = performance.now();
     const initOpt_1: InitOptions = {
         concurrency: 3,
-        debug: true,
+        debug: DEBUG_MODE,
+    };
+    const initOpt_2: InitOptions = {
+        concurrency: 10,
+        debug: DEBUG_MODE,
     };
     const crawler1 = new PttCrawler();
     const crawler2 = new PttCrawler();
     try {
         await crawler1.init(initOpt_1);
-        await crawler2.init({ concurrency: 10 });
+        await crawler2.init(initOpt_2);
         const crawlOpt1: CrawlerOptions = {
             board: 'sex',
             pages: 2,

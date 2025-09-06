@@ -25,6 +25,6 @@ pnpm-debug.log*
 
 # Temp files
 *temp.*
-
+results-*.json
 # npm component
 # package-lock.json

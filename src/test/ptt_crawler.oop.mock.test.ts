@@ -204,8 +204,8 @@ describe('PttCrawler - Mock Test', () => {
             // Mock for the main crawl, and then for the content scraping
             vi.mocked(page.evaluate)
                 .mockResolvedValueOnce(mockPage1Data) // For the main page list
-                .mockResolvedValueOnce('Content for post2') // For the first content page
-                .mockResolvedValueOnce('Content for post1'); // For the second content page
+                .mockResolvedValueOnce('Content for post1') // Corresponds to the last URL popped ('.../post1')
+                .mockResolvedValueOnce('Content for post2'); // Corresponds to the first URL popped ('.../post2')
 
             const result = await crawler.crawl({ board: 'TestBoard', pages: 1, getContents: true });
 

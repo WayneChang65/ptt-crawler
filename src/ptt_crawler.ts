@@ -12,6 +12,14 @@ puppeteer.use(StealthPlugin());
 const stopSelector = '#main-container > div.r-list-container.action-bar-margin.bbs-screen';
 
 /**
+ * Options for the initial of PPT crawler.
+ */
+export interface InitOptions {
+    concurrency?: number;
+    debug?: boolean;
+}
+
+/**
  * Options for the PTT crawler.
  */
 export interface CrawlerOptions {
@@ -23,14 +31,6 @@ export interface CrawlerOptions {
     skipPBs?: undefined | boolean;
     /** Whether to fetch the content of each post. */
     getContents?: undefined | boolean;
-}
-
-/**
- * Options for the initial of PPT crawler.
- */
-export interface InitOptions {
-    concurrency?: number;
-    debug?: boolean;
 }
 
 /**
@@ -99,20 +99,19 @@ export class PttCrawler {
      * This must be called before any other methods.
      */
     async init(initOption: InitOptions = { concurrency: 5, debug: false }) {
-        if (this.browser) {
-            return;
-        }
+        if (this.browser) return;
+
         try {
             const insideDocker = isInsideDocker();
             const chromiumExecutablePath = insideDocker ? '/usr/bin/chromium' : '/usr/bin/chromium-browser';
             this.this_os = os.platform();
             this.debug = initOption.debug as boolean;
-            if (this.debug)
-                fmlog('event_msg', [
-                    'PTT-CRAWLER',
-                    'The OS is ' + this.this_os,
-                    insideDocker ? '[ Inside a container ]' : '[ Not inside a container ]',
-                ]);
+
+            fmlog('event_msg', [
+                'PTT-CRAWLER',
+                'The OS is ' + this.this_os,
+                insideDocker ? '[ Inside a container ]' : '[ Not inside a container ]',
+            ]);
 
             const defaultLaunchOpts: LaunchOptions =
                 this.this_os === 'linux'
@@ -140,7 +139,7 @@ export class PttCrawler {
                 this.pages.push({ p: page });
             }
         } catch (e) {
-            fmlog('error', ['PTT-CRAWLER', 'init error', String(e)]);
+            fmlog('error_msg', ['PTT-CRAWLER', 'init error', String(e)]);
             throw e;
         }
     }
@@ -205,11 +204,11 @@ export class PttCrawler {
 
             /***** 爬各帖內文 *****/
             if (this.getContents) {
-                retObj.contents = await this._scrapingAllContents(retObj.urls, this.concurrency);
+                retObj.contents = await this._scrapingAllContents(retObj.urls);
             }
             return retObj;
         } catch (e) {
-            fmlog('error', ['PTT-CRAWLER', 'crawl error', String(e)]);
+            fmlog('error_msg', ['PTT-CRAWLER', 'crawl error', String(e)]);
             throw e;
         }
     }
@@ -321,55 +320,54 @@ export class PttCrawler {
      * Uses multiple pages for speed and blocks unnecessary resources on each page.
      * @private
      * @param {string[]} aryHref - An array of post URLs.
-     * @param {number} concurrency - The number of concurrent requests.
      * @returns {Promise<string[]>} A promise that resolves to an array of post contents.
      */
-    private async _scrapingAllContents(aryHref: string[], concurrency: number): Promise<string[]> {
+    private async _scrapingAllContents(aryHref: string[]): Promise<string[]> {
         if (!this.browser) {
             throw new Error('Crawler is not initialized. Please call init() first.');
         }
         const results: string[] = new Array(aryHref.length).fill('');
         const total = aryHref.length;
+        const aryTuppleHref = [...aryHref.entries()];
 
-        const worker = async (url: string, page: Page, idxAryHref: number) => {
-            try {
-                await page.bringToFront();
-                await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+        const worker = async (page: Page, stackHref: [number, string][], idxPage?: number) => {
+            let aHref: [number, string] | undefined;
+            while ((aHref = stackHref.pop()) !== undefined) {
+                const idx = aHref[0];
+                const url = aHref[1];
+                try {
+                    await page.bringToFront();
+                    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
 
-                const content = await page.evaluate(() => {
-                    const contentSelector = '#main-content';
-                    const el = document.querySelector<HTMLDivElement>(contentSelector);
-                    if (!el) return '';
+                    const content = await page.evaluate(() => {
+                        const contentSelector = '#main-content';
+                        const el = document.querySelector<HTMLDivElement>(contentSelector);
+                        if (!el) return '';
 
-                    return (el.innerText || '').trim();
-                });
-                results[idxAryHref] = content;
-            } catch (e) {
-                fmlog('warn', ['PTT-CRAWLER', `_scrapingAllContents error for ${url}`, String(e)]);
+                        return (el.innerText || '').trim();
+                    });
+                    results[idx] = content;
+                    if (this.debug) {
+                        fmlog('event_msg', [`WORKER-${idxPage}`, `idx: ${idx}`, content.split('\n')[0]]);
+                    }
+                } catch (e) {
+                    fmlog('error_msg', ['PTT-CRAWLER', `_scrapingAllContents error for ${url}`, String(e)]);
+                }
             }
         };
 
         const workers = [];
-        let i = 0;
-        while (i * concurrency < aryHref.length) {
-            for (let j = 0; j < concurrency; j++) {
-                if (i * concurrency + j + 1 > aryHref.length) {
-                    break;
-                }
-                const idx = i * concurrency + j;
-                workers.push(worker(aryHref[idx], this.pages[j].p, idx));
-            }
-            await Promise.all(workers);
-            workers.length = 0;
-            i++;
+        for (const [idx, page] of this.pages.entries()) {
+            workers.push(worker(page.p, aryTuppleHref, idx));
         }
+        await Promise.all(workers);
 
         if (this.debug) {
             this._saveObjToFile(results, `results-${total}-${this.scrapingBoard}.json`);
         }
         return results;
     }
-    
+
     /**
      * Saves an object to a file as a beautified JSON string.
      * @private
