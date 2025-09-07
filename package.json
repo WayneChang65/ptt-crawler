@@ -48,6 +48,7 @@
   },
   "homepage": "https://github.com/WayneChang65/ptt-crawler#readme",
   "dependencies": {
+    "@lifeomic/attempt": "^3.1.0",
     "@waynechang65/fml-consolelog": "^1.2.2",
     "is-docker": "^3.0.0",
     "puppeteer": "^24.15.0",

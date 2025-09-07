@@ -6,10 +6,19 @@ import os from 'os';
 import { log as fmlog } from '@waynechang65/fml-consolelog';
 import isInsideDocker from 'is-docker';
 import * as fs from 'fs/promises';
+import { retry } from '@lifeomic/attempt';
 
 puppeteer.use(StealthPlugin());
 
 const stopSelector = '#main-container > div.r-list-container.action-bar-margin.bbs-screen';
+/*
+export interface DebugOptions {
+    enable?: boolean;
+    saveResultToFiles?: boolean;
+    printRetryInfo?: boolean;
+    printWorkersInfo?: boolean;
+}
+*/
 
 /**
  * Options for the initial of PPT crawler.
@@ -110,7 +119,7 @@ export class PttCrawler {
      * Creates an instance of PttCrawler.
      * @param {LaunchOptions} [options={}] - Puppeteer launch options.
      */
-    constructor(private options: LaunchOptions = {}) { }
+    constructor(private options: LaunchOptions = {}) {}
 
     /**
      * Initializes the crawler, launching a browser instance.
@@ -135,13 +144,13 @@ export class PttCrawler {
             const defaultLaunchOpts: LaunchOptions =
                 this.this_os === 'linux'
                     ? {
-                        headless: true,
-                        executablePath: chromiumExecutablePath,
-                        args: ['--no-sandbox', '--disable-setuid-sandbox'],
-                    }
+                          headless: true,
+                          executablePath: chromiumExecutablePath,
+                          args: ['--no-sandbox', '--disable-setuid-sandbox'],
+                      }
                     : {
-                        headless: false,
-                    };
+                          headless: false,
+                      };
 
             this.browser = await puppeteer.launch(Object.assign(defaultLaunchOpts, this.options));
             this.concurrency = initOption.concurrency as number;
@@ -199,17 +208,26 @@ export class PttCrawler {
                 });
             }
             await page.bringToFront();
-            await page.goto(pttUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
-            const over18Button = await page.$('.over18-button-container');
-            if (over18Button) {
-                await Promise.all([
-                    over18Button.click(),
-                    page.waitForNavigation({
-                        waitUntil: 'domcontentloaded',
-                    }),
-                ]);
-            }
-            await page.waitForSelector(stopSelector, { timeout: 60000 });
+            await retry(
+                async (context) => {
+                    if (this.debug) {
+                        fmlog('event_msg', [`RETRY`, `attemptNum: ${context.attemptNum}`, '']);
+                    }
+                    await page.goto(pttUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+                    const over18Button = await page.$('.over18-button-container');
+                    if (over18Button) {
+                        await Promise.all([
+                            over18Button.click(),
+                            page.waitForNavigation({
+                                waitUntil: 'domcontentloaded',
+                            }),
+                        ]);
+                    }
+                    await page.waitForSelector(stopSelector, { timeout: 60000 });
+                },
+                { delay: 1000, maxAttempts: 10 }
+            );
+
             data_pages.push(await page.evaluate(this._scrapingOnePage, this.skipBottomPosts));
 
             for (let i = 1; i < this.scrapingPages; i++) {
@@ -390,8 +408,15 @@ export class PttCrawler {
                 const url = aHref[1];
                 try {
                     await page.bringToFront();
-                    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
-
+                    await retry(
+                        async (context) => {
+                            if (this.debug) {
+                                fmlog('event_msg', [`RETRY`, `attemptNum: ${context.attemptNum}`, '']);
+                            } 
+                            await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+                        },
+                        { delay: 1000, maxAttempts: 10 }
+                    );
                     const content = await page.evaluate(() => {
                         const contentSelector = '#main-content';
                         const el = document.querySelector<HTMLDivElement>(contentSelector);
@@ -406,7 +431,11 @@ export class PttCrawler {
                     }
                 } catch (e) {
                     if (this.debug) {
-                        fmlog('error_msg', ['PTT-CRAWLER', `_scrapingAllContents error for ${url}`, String(e)]);
+                        fmlog('error_msg', [
+                            'PTT-CRAWLER',
+                            `_scrapingAllContents error for ${url}`,
+                            String(e),
+                        ]);
                     }
                     throw e;
                 }
