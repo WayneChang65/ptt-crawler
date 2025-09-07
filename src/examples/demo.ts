@@ -10,7 +10,7 @@ const debugOpt: DebugOptions = {
     saveResultToFiles: true,
     printCrawlInfo: false,
     printRetryInfo: true,
-    printWorkersInfo: false
+    printWorkersInfo: false,
 };
 const headLess = true;
 

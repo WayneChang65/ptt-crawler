@@ -6,25 +6,56 @@ import os from 'os';
 import { log as fmlog } from '@waynechang65/fml-consolelog';
 import isInsideDocker from 'is-docker';
 import * as fs from 'fs/promises';
-import { retry } from '@lifeomic/attempt';
+import { retry, HandleError, HandleTimeout, CalculateDelay, BeforeAttempt } from '@lifeomic/attempt';
 
 puppeteer.use(StealthPlugin());
 
-const stopSelector = '#main-container > div.r-list-container.action-bar-margin.bbs-screen';
-
-const retryParam = {
-    delay: 2000,
-    maxAttempts: 10
+/**
+ * Options for retry setting of PPT crawler.
+ * See more details from {@link https://github.com/lifeomic/attempt#options}.
+ */
+export interface RetryOptions {
+    /** The time to wait before the first attempt in milliseconds. */
+    delay: number;
+    /** The maximum number of attempts. */
+    maxAttempts: number;
+    /** The initial time to wait between attempts in milliseconds. */
+    initialDelay?: number;
+    /** The minimum time to wait between attempts in milliseconds. */
+    minDelay?: number;
+    /** The maximum time to wait between attempts in milliseconds. */
+    maxDelay?: number;
+    /** The factor to multiply the delay by before the next attempt. */
+    factor?: number;
+    /** The maximum time to wait for an attempt in milliseconds. */
+    timeout?: number;
+    /** Whether to jitter the delay. */
+    jitter?: boolean;
+    /** Whether to jitter the initial delay. */
+    initialJitter?: boolean;
+    /** A function to handle errors. */
+    handleError?: HandleError<void>;
+    /** A function to handle timeouts. */
+    handleTimeout?: HandleTimeout<void>;
+    /** A function to run before each attempt. */
+    beforeAttempt?: BeforeAttempt<void>;
+    /** A function to calculate the delay between attempts. */
+    calculateDelay?: CalculateDelay<void>;
 }
 
 /**
  * Options for debug setting of PPT crawler.
  */
 export interface DebugOptions {
+    /** Whether to enable debug mode. */
     enable?: boolean;
+    /** Whether to save the result to files. */
     saveResultToFiles?: boolean;
+    /** Whether to print retry information. */
     printRetryInfo?: boolean;
+    /** Whether to print workers information. */
     printWorkersInfo?: boolean;
+    /** Whether to print crawl information. */
     printCrawlInfo?: boolean;
 }
 
@@ -32,8 +63,12 @@ export interface DebugOptions {
  * Options for the initial of PPT crawler.
  */
 export interface InitOptions {
+    /** The number of concurrent requests. */
     concurrency?: number;
+    /** The debug options. */
     debug?: DebugOptions;
+    /** The retry options. */
+    retry?: RetryOptions;
 }
 
 /**
@@ -111,6 +146,8 @@ export interface MergedPages {
  * A class to crawl posts from a PTT board.
  */
 export class PttCrawler {
+    private readonly stopSelector = '#main-container > div.r-list-container.action-bar-margin.bbs-screen';
+    private readonly puppteerTimeout = 5000; // 5s
     private browser: Browser | undefined;
     private pages: {
         p: Page;
@@ -126,7 +163,11 @@ export class PttCrawler {
         saveResultToFiles: false,
         printRetryInfo: false,
         printWorkersInfo: false,
-        printCrawlInfo: false
+        printCrawlInfo: false,
+    };
+    private retryOpt: RetryOptions = {
+        delay: 2000,
+        maxAttempts: 10,
     };
 
     /**
@@ -139,7 +180,7 @@ export class PttCrawler {
      * Initializes the crawler, launching a browser instance.
      * This must be called before any other methods.
      */
-    async init(initOption: InitOptions = { concurrency: 5, debug: undefined }) {
+    async init(initOption: InitOptions = { concurrency: 5, debug: undefined, retry: undefined }) {
         if (this.browser) return;
 
         try {
@@ -147,9 +188,11 @@ export class PttCrawler {
             const chromiumExecutablePath = insideDocker ? '/usr/bin/chromium' : '/usr/bin/chromium-browser';
             this.this_os = os.platform();
             if (initOption.debug) {
-                this.debug = { ...this.debug, ...initOption.debug }
+                this.debug = { ...this.debug, ...initOption.debug };
             }
-
+            if (initOption.retry) {
+                this.retryOpt = { ...this.retryOpt, ...initOption.retry };
+            }
             if (this.debug.enable && this.debug.printCrawlInfo) {
                 fmlog('event_msg', [
                     'PTT-CRAWLER',
@@ -172,7 +215,7 @@ export class PttCrawler {
             this.concurrency = initOption.concurrency as number;
             for (let i = 0; i < this.concurrency; i++) {
                 const page = await this.browser.newPage();
-                await page.setDefaultNavigationTimeout(180000); // 3 mins
+                await page.setDefaultNavigationTimeout(this.puppteerTimeout);
 
                 await page.setRequestInterception(true);
                 page.on('request', (req) => {
@@ -224,23 +267,22 @@ export class PttCrawler {
                 });
             }
             await page.bringToFront();
-            await retry(
-                async (context) => {
-                    if (this.debug.enable && this.debug.printRetryInfo) {
-                        fmlog('event_msg', [`RETRY`, `attemptNum: ${context.attemptNum}`, '']);
-                    }
-                    await page.goto(pttUrl, { waitUntil: 'domcontentloaded', timeout: 5000 });
-                    const over18Button = await page.$('.over18-button-container');
-                    if (over18Button) {
-                        await Promise.all([
-                            over18Button.click(),
-                            page.waitForNavigation({
-                                waitUntil: 'domcontentloaded',
-                            }),
-                        ]);
-                    }
-                    await page.waitForSelector(stopSelector);
-                }, retryParam);
+            await retry(async (context) => {
+                if (this.debug.enable && this.debug.printRetryInfo) {
+                    fmlog('event_msg', [`RETRY`, `attemptNum: ${context.attemptNum}`, '']);
+                }
+                await page.goto(pttUrl, { waitUntil: 'domcontentloaded', timeout: this.puppteerTimeout });
+                const over18Button = await page.$('.over18-button-container');
+                if (over18Button) {
+                    await Promise.all([
+                        over18Button.click(),
+                        page.waitForNavigation({
+                            waitUntil: 'domcontentloaded',
+                        }),
+                    ]);
+                }
+                await page.waitForSelector(this.stopSelector, { timeout: this.puppteerTimeout });
+            }, this.retryOpt);
 
             data_pages.push(await page.evaluate(this._scrapingOnePage, this.skipBottomPosts));
 
@@ -261,7 +303,12 @@ export class PttCrawler {
                     );
                     buttonPrePage?.click();
                 });
-                await page.waitForSelector(stopSelector);
+                await retry(async (context) => {
+                    if (this.debug.enable && this.debug.printRetryInfo) {
+                        fmlog('event_msg', [`RETRY`, `attemptNum: ${context.attemptNum}`, '']);
+                    }
+                    await page.waitForSelector(this.stopSelector, { timeout: this.puppteerTimeout });
+                }, this.retryOpt);
 
                 /***** 抓取網頁資料 (上一頁) *****/
                 data_pages.push(await page.evaluate(this._scrapingOnePage, this.skipBottomPosts));
@@ -420,13 +467,15 @@ export class PttCrawler {
                 const url = aHref[1];
                 try {
                     await page.bringToFront();
-                    await retry(
-                        async (context) => {
-                            if (this.debug.enable && this.debug.printRetryInfo) {
-                                fmlog('event_msg', [`RETRY`, `attemptNum: ${context.attemptNum}`, '']);
-                            } 
-                            await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 5000 });
-                        }, retryParam);
+                    await retry(async (context) => {
+                        if (this.debug.enable && this.debug.printRetryInfo) {
+                            fmlog('event_msg', [`RETRY`, `attemptNum: ${context.attemptNum}`, '']);
+                        }
+                        await page.goto(url, {
+                            waitUntil: 'domcontentloaded',
+                            timeout: this.puppteerTimeout,
+                        });
+                    }, this.retryOpt);
                     const content = await page.evaluate(() => {
                         const contentSelector = '#main-content';
                         const el = document.querySelector<HTMLDivElement>(contentSelector);
@@ -447,7 +496,10 @@ export class PttCrawler {
                             String(e),
                         ]);
                     }
-                    throw e;
+                    // 這裏沒有 throw e，主要是思考到如果中間有一個網頁出狀況，整個抓的結果就白費了
+                    // 因此，真的有特定網頁抓不到，就塞個 Error fetching訊息，讓要用的人自己斟酌是否重抓
+                    // throw e;
+                    results[idx] = `Error fetching content: ${url}`;
                 }
             }
         };
