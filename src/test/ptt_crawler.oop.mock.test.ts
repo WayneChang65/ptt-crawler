@@ -105,7 +105,7 @@ describe('PttCrawler - Mock Test', () => {
             const { browser, page } = await getMocks();
             await crawler.init();
             expect(browser.newPage).toHaveBeenCalled();
-            expect(page.setDefaultNavigationTimeout).toHaveBeenCalledWith(180000);
+            expect(page.setDefaultNavigationTimeout).toHaveBeenCalledWith(5000);
             expect(page.setRequestInterception).toHaveBeenCalledWith(true);
             expect(page.on).toHaveBeenCalledWith('request', expect.any(Function));
         });
