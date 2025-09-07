@@ -11,21 +11,29 @@ import { retry } from '@lifeomic/attempt';
 puppeteer.use(StealthPlugin());
 
 const stopSelector = '#main-container > div.r-list-container.action-bar-margin.bbs-screen';
-/*
+
+const retryParam = {
+    delay: 2000,
+    maxAttempts: 10
+}
+
+/**
+ * Options for debug setting of PPT crawler.
+ */
 export interface DebugOptions {
     enable?: boolean;
     saveResultToFiles?: boolean;
     printRetryInfo?: boolean;
     printWorkersInfo?: boolean;
+    printCrawlInfo?: boolean;
 }
-*/
 
 /**
  * Options for the initial of PPT crawler.
  */
 export interface InitOptions {
     concurrency?: number;
-    debug?: boolean;
+    debug?: DebugOptions;
 }
 
 /**
@@ -113,7 +121,13 @@ export class PttCrawler {
     private this_os = '';
     private getContents: boolean = false;
     private concurrency: number = 5;
-    private debug: boolean = false;
+    private debug: DebugOptions = {
+        enable: false,
+        saveResultToFiles: false,
+        printRetryInfo: false,
+        printWorkersInfo: false,
+        printCrawlInfo: false
+    };
 
     /**
      * Creates an instance of PttCrawler.
@@ -125,16 +139,18 @@ export class PttCrawler {
      * Initializes the crawler, launching a browser instance.
      * This must be called before any other methods.
      */
-    async init(initOption: InitOptions = { concurrency: 5, debug: false }) {
+    async init(initOption: InitOptions = { concurrency: 5, debug: undefined }) {
         if (this.browser) return;
 
         try {
             const insideDocker = isInsideDocker();
             const chromiumExecutablePath = insideDocker ? '/usr/bin/chromium' : '/usr/bin/chromium-browser';
             this.this_os = os.platform();
-            this.debug = initOption.debug as boolean;
+            if (initOption.debug) {
+                this.debug = { ...this.debug, ...initOption.debug }
+            }
 
-            if (this.debug) {
+            if (this.debug.enable && this.debug.printCrawlInfo) {
                 fmlog('event_msg', [
                     'PTT-CRAWLER',
                     'The OS is ' + this.this_os,
@@ -167,7 +183,7 @@ export class PttCrawler {
                 this.pages.push({ p: page });
             }
         } catch (e) {
-            if (this.debug) {
+            if (this.debug.enable && this.debug.printCrawlInfo) {
                 fmlog('error_msg', ['PTT-CRAWLER', 'init error', String(e)]);
             }
             throw e;
@@ -210,10 +226,10 @@ export class PttCrawler {
             await page.bringToFront();
             await retry(
                 async (context) => {
-                    if (this.debug) {
+                    if (this.debug.enable && this.debug.printRetryInfo) {
                         fmlog('event_msg', [`RETRY`, `attemptNum: ${context.attemptNum}`, '']);
                     }
-                    await page.goto(pttUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+                    await page.goto(pttUrl, { waitUntil: 'domcontentloaded', timeout: 5000 });
                     const over18Button = await page.$('.over18-button-container');
                     if (over18Button) {
                         await Promise.all([
@@ -223,10 +239,8 @@ export class PttCrawler {
                             }),
                         ]);
                     }
-                    await page.waitForSelector(stopSelector, { timeout: 60000 });
-                },
-                { delay: 1000, maxAttempts: 10 }
-            );
+                    await page.waitForSelector(stopSelector);
+                }, retryParam);
 
             data_pages.push(await page.evaluate(this._scrapingOnePage, this.skipBottomPosts));
 
@@ -247,9 +261,7 @@ export class PttCrawler {
                     );
                     buttonPrePage?.click();
                 });
-                await page.waitForSelector(stopSelector, {
-                    timeout: 60000,
-                });
+                await page.waitForSelector(stopSelector);
 
                 /***** 抓取網頁資料 (上一頁) *****/
                 data_pages.push(await page.evaluate(this._scrapingOnePage, this.skipBottomPosts));
@@ -264,7 +276,7 @@ export class PttCrawler {
             }
             return retObj;
         } catch (e) {
-            if (this.debug) {
+            if (this.debug.enable && this.debug.printCrawlInfo) {
                 fmlog('error_msg', ['PTT-CRAWLER', 'crawl error', String(e)]);
             }
             throw e;
@@ -410,13 +422,11 @@ export class PttCrawler {
                     await page.bringToFront();
                     await retry(
                         async (context) => {
-                            if (this.debug) {
+                            if (this.debug.enable && this.debug.printRetryInfo) {
                                 fmlog('event_msg', [`RETRY`, `attemptNum: ${context.attemptNum}`, '']);
                             } 
-                            await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
-                        },
-                        { delay: 1000, maxAttempts: 10 }
-                    );
+                            await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 5000 });
+                        }, retryParam);
                     const content = await page.evaluate(() => {
                         const contentSelector = '#main-content';
                         const el = document.querySelector<HTMLDivElement>(contentSelector);
@@ -426,11 +436,11 @@ export class PttCrawler {
                     });
                     results[idx] = content;
 
-                    if (this.debug) {
+                    if (this.debug.enable && this.debug.printWorkersInfo) {
                         fmlog('event_msg', [`WORKER-${idxPage}`, `idx: ${idx}`, content.split('\n')[0]]);
                     }
                 } catch (e) {
-                    if (this.debug) {
+                    if (this.debug.enable && this.debug.printCrawlInfo) {
                         fmlog('error_msg', [
                             'PTT-CRAWLER',
                             `_scrapingAllContents error for ${url}`,
@@ -448,7 +458,7 @@ export class PttCrawler {
         }
         await Promise.all(workers);
 
-        if (this.debug) {
+        if (this.debug.enable && this.debug.saveResultToFiles) {
             this._saveObjToFile(results, `results-${total}-${this.scrapingBoard}.json`);
         }
         return results;

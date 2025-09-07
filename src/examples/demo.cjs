@@ -5,7 +5,15 @@ const { performance } = require('perf_hooks');
 const prettyMs = require('pretty-ms').default;
 const cli = require('pixl-cli');
 
-const DEBUG = true;
+const debugOpt = {
+    enable: true,
+    saveResultToFiles: true,
+    printCrawlInfo: false,
+    printRetryInfo: true,
+    printWorkersInfo: false
+};
+const headLess = true;
+
 main();
 
 /*
@@ -29,14 +37,14 @@ async function run_oop() {
     const startTime = performance.now();
     const initOpt_1 = {
         concurrency: 3,
-        debug: DEBUG,
+        debug: debugOpt,
     };
     const initOpt_2 = {
         concurrency: 10,
-        debug: DEBUG,
+        debug: debugOpt,
     };
-    const crawler1 = new PttCrawler({ headless: DEBUG ? false : true });
-    const crawler2 = new PttCrawler({ headless: DEBUG ? false : true });
+    const crawler1 = new PttCrawler({ headless: headLess });
+    const crawler2 = new PttCrawler({ headless: headLess });
     try {
         // *** Initialize ***
         await crawler1.init(initOpt_1);
@@ -86,7 +94,7 @@ async function run_mop() {
     const startTime = performance.now();
     try {
         // *** Initialize ***
-        await ptt_crawler.initialize({ headless: DEBUG ? false : true });
+        await ptt_crawler.initialize({ headless: headLess });
 
         // *** GetResult  ***
         let ptt;

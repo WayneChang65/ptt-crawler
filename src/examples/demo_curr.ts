@@ -1,9 +1,16 @@
-import { PttCrawler, MergedPages, InitOptions, CrawlerOptions } from '../index.js';
+import { PttCrawler, MergedPages, InitOptions, CrawlerOptions, DebugOptions } from '../index.js';
 import { log as fmlog } from '@waynechang65/fml-consolelog';
 import { performance } from 'perf_hooks';
 import prettyMs from 'pretty-ms';
 
-const DEBUG = true;
+const debugOpt: DebugOptions = {
+    enable: false,
+    saveResultToFiles: false,
+    printCrawlInfo: false,
+    printRetryInfo: false,
+    printWorkersInfo: false
+};
+const headLess = true;
 
 (async () => {
     await run_oop();
@@ -13,14 +20,14 @@ async function run_oop() {
     const startTime = performance.now();
     const initOpt_1: InitOptions = {
         concurrency: 3,
-        debug: DEBUG,
+        debug: debugOpt,
     };
     const initOpt_2: InitOptions = {
         concurrency: 10,
-        debug: DEBUG,
+        debug: debugOpt,
     };
-    const crawler1 = new PttCrawler({ headless: DEBUG ? false : true });
-    const crawler2 = new PttCrawler({ headless: DEBUG ? false : true });
+    const crawler1 = new PttCrawler({ headless: headLess });
+    const crawler2 = new PttCrawler({ headless: headLess });
     try {
         await crawler1.init(initOpt_1);
         await crawler2.init(initOpt_2);
