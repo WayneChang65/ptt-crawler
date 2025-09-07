@@ -125,12 +125,13 @@ export class PttCrawler {
             this.this_os = os.platform();
             this.debug = initOption.debug as boolean;
 
-            fmlog('event_msg', [
-                'PTT-CRAWLER',
-                'The OS is ' + this.this_os,
-                insideDocker ? '[ Inside a container ]' : '[ Not inside a container ]',
-            ]);
-
+            if (this.debug) {
+                fmlog('event_msg', [
+                    'PTT-CRAWLER',
+                    'The OS is ' + this.this_os,
+                    insideDocker ? '[ Inside a container ]' : '[ Not inside a container ]',
+                ]);
+            }
             const defaultLaunchOpts: LaunchOptions =
                 this.this_os === 'linux'
                     ? {
@@ -157,7 +158,9 @@ export class PttCrawler {
                 this.pages.push({ p: page });
             }
         } catch (e) {
-            fmlog('error_msg', ['PTT-CRAWLER', 'init error', String(e)]);
+            if (this.debug) {
+                fmlog('error_msg', ['PTT-CRAWLER', 'init error', String(e)]);
+            }
             throw e;
         }
     }
@@ -171,7 +174,6 @@ export class PttCrawler {
         if (!this.browser) {
             throw new Error('Crawler is not initialized. Please call init() first.');
         }
-        //options = options ?? {};
 
         const data_pages: CrawlerOnePage[] = [];
         const pages = typeof options.pages === 'number' && options.pages > 0 ? Math.floor(options.pages) : 1;
@@ -187,6 +189,15 @@ export class PttCrawler {
 
         const pttUrl = 'https://www.ptt.cc/bbs/' + this.scrapingBoard + '/index.html';
         try {
+            if (onProgress) {
+                onProgress({
+                    type: 'crawling_pages',
+                    message: `Crawling page 1 of ${this.scrapingPages}...`,
+                    current: 1,
+                    total: this.scrapingPages,
+                    percent: Math.round((1 / this.scrapingPages) * 100),
+                });
+            }
             await page.bringToFront();
             await page.goto(pttUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
             const over18Button = await page.$('.over18-button-container');
@@ -199,19 +210,18 @@ export class PttCrawler {
                 ]);
             }
             await page.waitForSelector(stopSelector, { timeout: 60000 });
-
             data_pages.push(await page.evaluate(this._scrapingOnePage, this.skipBottomPosts));
 
-            if (onProgress) {
-                onProgress({
-                    type: 'crawling_pages',
-                    message: `Crawling page 1 of ${this.scrapingPages}...`,
-                    current: 1,
-                    total: this.scrapingPages,
-                    percent: Math.round((1 / this.scrapingPages) * 100),
-                });
-            }
             for (let i = 1; i < this.scrapingPages; i++) {
+                if (onProgress) {
+                    onProgress({
+                        type: 'crawling_pages',
+                        message: `Crawling page ${i + 1} of ${this.scrapingPages}...`,
+                        current: i + 1,
+                        total: this.scrapingPages,
+                        percent: Math.round((i + 1 / this.scrapingPages) * 100),
+                    });
+                }
                 /***** 點選 "上一頁" 到上一頁較舊的資料 *****/
                 await page.evaluate(() => {
                     const buttonPrePage = document.querySelector<HTMLDivElement>(
@@ -225,16 +235,6 @@ export class PttCrawler {
 
                 /***** 抓取網頁資料 (上一頁) *****/
                 data_pages.push(await page.evaluate(this._scrapingOnePage, this.skipBottomPosts));
-
-                if (onProgress) {
-                    onProgress({
-                        type: 'crawling_pages',
-                        message: `Crawling page ${i + 1} of ${this.scrapingPages}...`,
-                        current: i + 1,
-                        total: this.scrapingPages,
-                        percent: Math.round((i + 1 / this.scrapingPages) * 100),
-                    });
-                }
             }
 
             /***** 將多頁資料 "照實際新舊順序" 合成 1 個物件 *****/
@@ -246,7 +246,9 @@ export class PttCrawler {
             }
             return retObj;
         } catch (e) {
-            fmlog('error_msg', ['PTT-CRAWLER', 'crawl error', String(e)]);
+            if (this.debug) {
+                fmlog('error_msg', ['PTT-CRAWLER', 'crawl error', String(e)]);
+            }
             throw e;
         }
     }
@@ -403,7 +405,10 @@ export class PttCrawler {
                         fmlog('event_msg', [`WORKER-${idxPage}`, `idx: ${idx}`, content.split('\n')[0]]);
                     }
                 } catch (e) {
-                    fmlog('error_msg', ['PTT-CRAWLER', `_scrapingAllContents error for ${url}`, String(e)]);
+                    if (this.debug) {
+                        fmlog('error_msg', ['PTT-CRAWLER', `_scrapingAllContents error for ${url}`, String(e)]);
+                    }
+                    throw e;
                 }
             }
         };

@@ -5,7 +5,7 @@ import { performance } from 'perf_hooks';
 import prettyMs from 'pretty-ms';
 import cli from 'pixl-cli';
 
-const DEBUG = true;
+const DEBUG = false;
 main();
 
 /*
