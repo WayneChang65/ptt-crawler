@@ -31,6 +31,24 @@ export interface CrawlerOptions {
     skipPBs?: undefined | boolean;
     /** Whether to fetch the content of each post. */
     getContents?: undefined | boolean;
+    /** A callback function to receive progress updates. */
+    onProgress?: (progress: Progress) => void;
+}
+
+/**
+ * Represents the progress of the crawler.
+ */
+export interface Progress {
+    /** The type of the current operation. */
+    type: 'crawling_pages' | 'fetching_contents';
+    /** A human-readable message describing the current status. */
+    message: string;
+    /** The number of items completed so far. */
+    current: number;
+    /** The total number of items to process. */
+    total: number;
+    /** The completion percentage (0-100). */
+    percent: number;
 }
 
 /**
@@ -92,7 +110,7 @@ export class PttCrawler {
      * Creates an instance of PttCrawler.
      * @param {LaunchOptions} [options={}] - Puppeteer launch options.
      */
-    constructor(private options: LaunchOptions = {}) {}
+    constructor(private options: LaunchOptions = {}) { }
 
     /**
      * Initializes the crawler, launching a browser instance.
@@ -116,13 +134,13 @@ export class PttCrawler {
             const defaultLaunchOpts: LaunchOptions =
                 this.this_os === 'linux'
                     ? {
-                          headless: true,
-                          executablePath: chromiumExecutablePath,
-                          args: ['--no-sandbox', '--disable-setuid-sandbox'],
-                      }
+                        headless: true,
+                        executablePath: chromiumExecutablePath,
+                        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+                    }
                     : {
-                          headless: false,
-                      };
+                        headless: false,
+                    };
 
             this.browser = await puppeteer.launch(Object.assign(defaultLaunchOpts, this.options));
             this.concurrency = initOption.concurrency as number;
@@ -153,10 +171,11 @@ export class PttCrawler {
         if (!this.browser) {
             throw new Error('Crawler is not initialized. Please call init() first.');
         }
-        options = options ?? {};
+        //options = options ?? {};
 
         const data_pages: CrawlerOnePage[] = [];
         const pages = typeof options.pages === 'number' && options.pages > 0 ? Math.floor(options.pages) : 1;
+        const onProgress = options.onProgress;
 
         this.scrapingBoard = options.board || 'Tos';
         this.scrapingPages = pages;
@@ -183,6 +202,15 @@ export class PttCrawler {
 
             data_pages.push(await page.evaluate(this._scrapingOnePage, this.skipBottomPosts));
 
+            if (onProgress) {
+                onProgress({
+                    type: 'crawling_pages',
+                    message: `Crawling page 1 of ${this.scrapingPages}...`,
+                    current: 1,
+                    total: this.scrapingPages,
+                    percent: Math.round((1 / this.scrapingPages) * 100),
+                });
+            }
             for (let i = 1; i < this.scrapingPages; i++) {
                 /***** 點選 "上一頁" 到上一頁較舊的資料 *****/
                 await page.evaluate(() => {
@@ -197,6 +225,16 @@ export class PttCrawler {
 
                 /***** 抓取網頁資料 (上一頁) *****/
                 data_pages.push(await page.evaluate(this._scrapingOnePage, this.skipBottomPosts));
+
+                if (onProgress) {
+                    onProgress({
+                        type: 'crawling_pages',
+                        message: `Crawling page ${i + 1} of ${this.scrapingPages}...`,
+                        current: i + 1,
+                        total: this.scrapingPages,
+                        percent: Math.round((i + 1 / this.scrapingPages) * 100),
+                    });
+                }
             }
 
             /***** 將多頁資料 "照實際新舊順序" 合成 1 個物件 *****/
@@ -204,7 +242,7 @@ export class PttCrawler {
 
             /***** 爬各帖內文 *****/
             if (this.getContents) {
-                retObj.contents = await this._scrapingAllContents(retObj.urls);
+                retObj.contents = await this._scrapingAllContents(retObj.urls, onProgress);
             }
             return retObj;
         } catch (e) {
@@ -322,7 +360,10 @@ export class PttCrawler {
      * @param {string[]} aryHref - An array of post URLs.
      * @returns {Promise<string[]>} A promise that resolves to an array of post contents.
      */
-    private async _scrapingAllContents(aryHref: string[]): Promise<string[]> {
+    private async _scrapingAllContents(
+        aryHref: string[],
+        onProgress?: (progress: Progress) => void
+    ): Promise<string[]> {
         if (!this.browser) {
             throw new Error('Crawler is not initialized. Please call init() first.');
         }
@@ -333,6 +374,16 @@ export class PttCrawler {
         const worker = async (page: Page, stackHref: [number, string][], idxPage?: number) => {
             let aHref: [number, string] | undefined;
             while ((aHref = stackHref.pop()) !== undefined) {
+                if (onProgress) {
+                    const completedCount = total - stackHref.length;
+                    onProgress({
+                        type: 'fetching_contents',
+                        message: `Fetching content ${completedCount} of ${total}...`,
+                        current: completedCount,
+                        total: total,
+                        percent: Math.round((completedCount / total) * 100),
+                    });
+                }
                 const idx = aHref[0];
                 const url = aHref[1];
                 try {
@@ -347,6 +398,7 @@ export class PttCrawler {
                         return (el.innerText || '').trim();
                     });
                     results[idx] = content;
+
                     if (this.debug) {
                         fmlog('event_msg', [`WORKER-${idxPage}`, `idx: ${idx}`, content.split('\n')[0]]);
                     }

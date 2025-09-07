@@ -8,3 +8,5 @@ declare module 'puppeteer-extra' {
   const puppeteer: PuppeteerExtra;
   export default puppeteer;
 }
+
+declare module 'pixl-cli';

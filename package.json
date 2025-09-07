@@ -36,7 +36,10 @@
     "spider",
     "scrape",
     "批踢踢",
-    "BBS"
+    "BBS",
+    "nodejs",
+    "typescript",
+    "javascript"
   ],
   "author": "WayneChang65",
   "license": "MIT",
@@ -58,6 +61,7 @@
     "@typescript-eslint/parser": "^8.36.0",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^10.1.5",
+    "pixl-cli": "^1.0.21",
     "prettier": "^3.6.2",
     "pretty-ms": "^9.2.0",
     "tsx": "^4.20.3",

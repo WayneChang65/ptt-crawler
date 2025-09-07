@@ -3,8 +3,9 @@ const ptt_crawler = require('../../dist/index.js');
 const fmlog = require('@waynechang65/fml-consolelog').log;
 const { performance } = require('perf_hooks');
 const prettyMs = require('pretty-ms').default;
+const cli = require('pixl-cli');
 
-const DEBUG_MODE = true;
+const DEBUG = true;
 main();
 
 /*
@@ -18,22 +19,24 @@ resources. The current default setting is 5.
 */
 
 async function main() {
+    cli.progress.start({ freq: 50, width: 50 });
     await run_oop();
     await run_mop();
+    cli.progress.end();
 }
 
 async function run_oop() {
     const startTime = performance.now();
     const initOpt_1 = {
         concurrency: 3,
-        debug: DEBUG_MODE
-    }
+        debug: DEBUG,
+    };
     const initOpt_2 = {
         concurrency: 10,
-        debug: DEBUG_MODE
-    }
-    const crawler1 = new PttCrawler();
-    const crawler2 = new PttCrawler();
+        debug: DEBUG,
+    };
+    const crawler1 = new PttCrawler({ headless: DEBUG ? false : true });
+    const crawler2 = new PttCrawler({ headless: DEBUG ? false : true });
     try {
         // *** Initialize ***
         await crawler1.init(initOpt_1);
@@ -42,8 +45,8 @@ async function run_oop() {
         // *** GetResult  ***
         let ptt;
         let crawlOpt;
-        
-         // 爬 tos 版, 爬 1 頁, 保留置底文, 不爬內文
+
+        // 爬 tos 版, 爬 1 頁, 保留置底文, 不爬內文
         ptt = await crawler1.crawl();
         consoleOut('Tos', 1, ptt);
 
@@ -53,8 +56,9 @@ async function run_oop() {
             pages: 2,
             skipPBs: true,
             getContents: true,
-        }
-        ptt = await crawler1.crawl(crawlOpt); 
+            onProgress: handleProgress,
+        };
+        ptt = await crawler1.crawl(crawlOpt);
         consoleOut(crawlOpt.board, crawlOpt.pages, ptt);
 
         // 爬 PokemonGO版, 爬 5 頁, 留下置底文, 爬內文
@@ -62,8 +66,9 @@ async function run_oop() {
             board: 'PokemonGO',
             pages: 5,
             getContents: true,
-        }
-        ptt = await crawler2.crawl(crawlOpt); 
+            onProgress: handleProgress,
+        };
+        ptt = await crawler2.crawl(crawlOpt);
         consoleOut(crawlOpt.board, crawlOpt.pages, ptt);
         showOneContent(ptt);
     } catch (error) {
@@ -81,7 +86,7 @@ async function run_mop() {
     const startTime = performance.now();
     try {
         // *** Initialize ***
-        await ptt_crawler.initialize();
+        await ptt_crawler.initialize({ headless: DEBUG ? false : true });
 
         // *** GetResult  ***
         let ptt;
@@ -90,6 +95,7 @@ async function run_mop() {
         ptt = await ptt_crawler.getResults({
             pages: 3,
             skipPBs: true,
+            onProgress: handleProgress,
         });
         consoleOut('Tos', 3, ptt);
 
@@ -98,6 +104,7 @@ async function run_mop() {
             board: 'gossiping',
             pages: 2,
             getContents: true,
+            onProgress: handleProgress,
         });
         consoleOut('Gossiping', 2, ptt);
         showOneContent(ptt);
@@ -142,3 +149,11 @@ ${ptt.contents?.[0]}
 `
     );
 }
+
+const handleProgress = (progress) => {
+    //cli.print(cli.box(progress.message) + '\n');
+    cli.progress.update({
+        amount: progress.percent / 100,
+        text: progress.message,
+    });
+};
