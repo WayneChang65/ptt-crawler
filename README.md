@@ -14,7 +14,7 @@
 
 > [!IMPORTANT]
 > :thumbsup: `3.1.0 版本`，利用非同步並發處理，爬取內文效率大增，依照測試結果，**時間可減少81%以上**。[(Benchmark)](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/benchmark.md)  
-`Version 3.1.0`: Utilizes concurrent processing with asynchronous to significantly boost content crawling efficiency, **reducing processing time by over 81% according to our benchmark results**.[(Benchmark)](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/benchmark.md)
+`Version 3.1.0`: Utilizes concurrent processing with asynchronous to significantly boost content crawling efficiency, **reducing processing time by over 81% according to our benchmark results**.[(Benchmark)](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/benchmark.md)  
 > :thumbsup: `3.0.1 版本`，利用並發處理，爬取內文效率大增，依照測試結果，**時間可減少77%以上**。[(Benchmark)](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/benchmark.md)  
 `Version 3.0.1`: Utilizes concurrent processing to significantly boost content crawling efficiency, **reducing processing time by over 77% according to our benchmark results**.[(Benchmark)](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/benchmark.md)  
 > :bookmark: `3.x.x 版本`，主要利用「物件導向類別」進行使用，仍保留原本2.x.x版本的模組函式呼叫介面(如：initialize(), getResults(),...)。但是，**預計在4.0.0以後的版本，把原2.x.x版本函式(Deprecated)刪除，請留意！！！**  
@@ -80,9 +80,11 @@ try {
     // *** Initialize *** 
     // concurrency: 並行數量 (預設 5)
     // debug: 開啟/設定除錯選項 (預設 false)
+    // retry: 開啟/設定重試選項 (預設 delay: 2000, maxAttempts: 10)
     await pttCrawler.init({
         concurrency: 5,
-        debug: { enable: true, printRetryInfo: true }
+        debug: { enable: true, printRetryInfo: true },
+        retry: { delay: 2000, maxAttempts: 10 }
     });
 
     // *** Crawl  ***
@@ -173,7 +175,9 @@ npm run test:e2e
 
 ## 基本方法 (Base Methods)
 
-* `new PttCrawler()`: 建立一個爬蟲實例 (create a crawler instance).  
+* `new PttCrawler(options)`: 建立一個爬蟲實例 (create a crawler instance).  
+
+>> `options`: Puppeteer 的 `LaunchOptions` 物件，可用來客製化瀏覽器行為 (Puppeteer's `LaunchOptions` object to customize browser behavior). See more details from [Puppeteer API](https://pptr.dev/api/puppeteer.launchoptions).
 
 * `init(options)`: 初始化爬蟲 (initialize the crawler).  
 
@@ -185,6 +189,11 @@ npm run test:e2e
 >> * `printRetryInfo`: 印出重試的訊息 (Print details of retry attempts)
 >> * `printWorkersInfo`: 印出併發Workers的訊息 (Print concurrent worker status)
 >> * `saveResultToFiles`: 爬蟲結果存成檔案 (Save the final results to a JSON file)
+>>
+>> `options.retry`: 重試參數設定物件 (An object to configure retry settings). See more details from [attempt](https://github.com/lifeomic/attempt#options).
+>>
+>> * `delay`: 第一次重試前需等待的時間(毫秒) (The time to wait before the first attempt in milliseconds).
+>> * `maxAttempts`: 最大重試次數 (The maximum number of attempts).
 
 * `crawl(options)`: 開始爬資料 (start to scrape data).  
 
