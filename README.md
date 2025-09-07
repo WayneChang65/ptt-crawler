@@ -13,10 +13,12 @@
 ## :heavy_exclamation_mark:注意 (Attention):heavy_exclamation_mark:  
 
 > [!IMPORTANT]
-> :thumbsup: `3.0.1 版本`，利用並發處理，爬取內文效率大增，依照測試結果，**時間可減少79%以上**。[(Benchmark)](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/benchmark.md)  
-`Version 3.0.1`: Utilizes concurrent processing to significantly boost content crawling efficiency, **reducing processing time by over 79% according to our benchmark results**.[(Benchmark)](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/benchmark.md)  
-> :bookmark: `3.0.1 版本`，主要利用「物件導向類別」進行使用，仍保留原本2.x.x的模組函式呼叫介面(如：initialize(), getResults(),...)。但是，**預計在3.1.0以後的版本，把原2.x.x版本函式(Deprecated)刪除，請留意！！！**  
-`Version 3.0.1`: It primarily utilizes an object-oriented class for usage, but still retains the original 2.x.x module function call interfaces (e.g., initialize(), getResults(), etc.). However, these **2.x.x functions are deprecated and are planned for removal in versions 3.1.0 and later. Please take note!**  
+> :thumbsup: `3.1.0 版本`，利用非同步並發處理，爬取內文效率大增，依照測試結果，**時間可減少81%以上**。[(Benchmark)](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/benchmark.md)  
+`Version 3.1.0`: Utilizes concurrent processing with asynchronous to significantly boost content crawling efficiency, **reducing processing time by over 81% according to our benchmark results**.[(Benchmark)](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/benchmark.md)
+> :thumbsup: `3.0.1 版本`，利用並發處理，爬取內文效率大增，依照測試結果，**時間可減少77%以上**。[(Benchmark)](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/benchmark.md)  
+`Version 3.0.1`: Utilizes concurrent processing to significantly boost content crawling efficiency, **reducing processing time by over 77% according to our benchmark results**.[(Benchmark)](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/benchmark.md)  
+> :bookmark: `3.x.x 版本`，主要利用「物件導向類別」進行使用，仍保留原本2.x.x版本的模組函式呼叫介面(如：initialize(), getResults(),...)。但是，**預計在4.0.0以後的版本，把原2.x.x版本函式(Deprecated)刪除，請留意！！！**  
+`Version 3.x.x`: It primarily utilizes an object-oriented class for usage, but still retains the original 2.x.x module function call interfaces (e.g., initialize(), getResults(), etc.). However, these **2.x.x functions are deprecated and are planned for removal in versions 4.0.0 and later. Please take note!**  
 
 ## 前言 (Overview)  
 
@@ -39,6 +41,10 @@ Option to **skip pinned posts**.
 Scraped data includes hyperlinks, rates, titles, authors, dates, and marks.
 * 針對發文，可選擇是否要爬**所有內文(含留言)**  
 Option to scrape **the full content (including comments) for each post**.  
+* 內建請求重試機制，提高在不穩定網路下的爬取成功率  
+Built-in request retry mechanism to improve success rate in unstable network conditions.
+* 提供進度回報 (`onProgress`)，即時監控爬取狀態  
+Provides progress reporting (`onProgress`) for real-time monitoring of crawling status.  
 
 ## 如何在您的專案使用？ (How to use it in your project ?)  
 
@@ -61,7 +67,7 @@ const { PttCrawler } = require('@waynechang65/ptt-crawler');
 // ES Module (for js)
 import { PttCrawler } from '@waynechang65/ptt-crawler';
 // ES Module (for ts)
-import { PttCrawler, MergedPages } from '@waynechang65/ptt-crawler'; // MergedPages 是爬取結果的 interface (for ts)
+import { PttCrawler, MergedPages, Progress, DebugOptions } from '@waynechang65/ptt-crawler';
 ```
 
 * 接下來，用**async函式**包含下面幾行程式就搞定了。  
@@ -72,17 +78,24 @@ const pttCrawler = new PttCrawler();
 
 try {
     // *** Initialize *** 
-    // concurrency 是設定爬取內文時的並行數量，預設為 5
-    // concurrency is for setting the number of concurrent requests when scraping contents, default is 5.
-    await pttCrawler.init({ concurrency: 5 });
+    // concurrency: 並行數量 (預設 5)
+    // debug: 開啟/設定除錯選項 (預設 false)
+    await pttCrawler.init({
+        concurrency: 5,
+        debug: { enable: true, printRetryInfo: true }
+    });
 
     // *** Crawl  ***
     const ptt = await pttCrawler.crawl({
         board: 'PokemonGO',
         pages: 3,
         skipPBs: true,
-        getContents: true
-    }); // Ptt PokemonGO board, 3 pages, skip fixed bottom posts, scrape content of posts
+        getContents: true,
+        onProgress: (progress) => {
+            // e.g., { type: 'crawling_pages', message: 'Crawling page 1 of 3...', current: 1, total: 3, percent: 33.33 }
+            console.log(`${progress.message} ${progress.percent.toFixed(2)}%`);
+        }
+    });
     console.log(ptt);
 
 } catch (error) {
@@ -165,7 +178,13 @@ npm run test:e2e
 * `init(options)`: 初始化爬蟲 (initialize the crawler).  
 
 >> `options.concurrency`: 爬取內文時的並行數量，預設為 5 (concurrency for scraping contents, default is 5).  
->> `options.debug`: 是否開啟除錯模式，預設為 false (enable debug mode, default is false).
+>> `options.debug`: debug參數設定物件 (An object to configure debug settings)
+>>
+>> * `enable`: 啟動或關閉debug模式 (Globally enable or disable debug mode)  
+>> * `printCrawlInfo`: 印出爬蟲訊息 (Print general crawling information)  
+>> * `printRetryInfo`: 印出重試的訊息 (Print details of retry attempts)
+>> * `printWorkersInfo`: 印出併發Workers的訊息 (Print concurrent worker status)
+>> * `saveResultToFiles`: 爬蟲結果存成檔案 (Save the final results to a JSON file)
 
 * `crawl(options)`: 開始爬資料 (start to scrape data).  
 
@@ -173,6 +192,7 @@ npm run test:e2e
 >> `options.pages`: 要爬幾頁 (pages).  
 >> `options.skipPBs`: 是否忽略置底文 (skip fix bottom posts).  
 >> `options.getContents`: 是否爬內文(會花費較多時間) (scrape contents).  
+>> `options.onProgress`: (`(progress: Progress) => void`) 爬取過程狀態的回呼函式 (A callback function to receive progress updates)
 
 * `close()`: 關閉爬蟲並釋放資源 (close the crawler and release resources).  
 
