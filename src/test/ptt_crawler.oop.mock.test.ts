@@ -3,34 +3,30 @@ import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { PttCrawler, type MergedPages } from '../ptt_crawler';
 
 // Mock external dependencies
-vi.mock('puppeteer-extra', () => {
-    const mockPage = {
-        goto: vi.fn().mockResolvedValue(undefined),
-        $: vi.fn().mockResolvedValue({
-            click: vi.fn().mockResolvedValue(undefined),
-        }),
-        waitForNavigation: vi.fn().mockResolvedValue(undefined),
-        waitForSelector: vi.fn().mockResolvedValue(undefined),
-        evaluate: vi.fn(),
-        setDefaultNavigationTimeout: vi.fn(),
-        setRequestInterception: vi.fn(),
-        on: vi.fn(),
-        close: vi.fn().mockResolvedValue(undefined),
-        bringToFront: vi.fn().mockResolvedValue(undefined),
-    };
+const mockPage = {
+    goto: vi.fn(),
+    $: vi.fn(),
+    waitForNavigation: vi.fn(),
+    waitForSelector: vi.fn(),
+    evaluate: vi.fn(),
+    setDefaultNavigationTimeout: vi.fn(),
+    setRequestInterception: vi.fn(),
+    on: vi.fn(),
+    close: vi.fn(),
+    bringToFront: vi.fn(),
+};
 
-    const mockBrowser = {
-        newPage: vi.fn().mockResolvedValue(mockPage),
-        close: vi.fn().mockResolvedValue(undefined),
-    };
+const mockBrowser = {
+    newPage: vi.fn().mockResolvedValue(mockPage),
+    close: vi.fn(),
+};
 
-    return {
-        default: {
-            use: vi.fn().mockReturnThis(),
-            launch: vi.fn().mockResolvedValue(mockBrowser),
-        },
-    };
-});
+vi.mock('puppeteer-extra', () => ({
+    default: {
+        use: vi.fn().mockReturnThis(),
+        launch: vi.fn().mockImplementation(async () => mockBrowser),
+    },
+}));
 
 vi.mock('is-docker', () => ({
     default: vi.fn().mockReturnValue(false),
@@ -46,6 +42,11 @@ vi.mock('@waynechang65/fml-consolelog', () => ({
     log: vi.fn(),
 }));
 
+// Mock the retry logic to execute immediately
+vi.mock('@lifeomic/attempt', () => ({
+    retry: vi.fn().mockImplementation(async (fn) => fn({})),
+}));
+
 // Import modules after mocking
 const puppeteer = (await import('puppeteer-extra')).default;
 const isInsideDocker = (await import('is-docker')).default;
@@ -54,15 +55,10 @@ const os = (await import('os')).default;
 describe('PttCrawler - Mock Test', () => {
     let crawler: PttCrawler;
 
-    // Helper to access mocked objects
-    const getMocks = async () => {
-        const browser = await puppeteer.launch();
-        const page = await browser.newPage();
-        return { browser, page };
-    };
-
     beforeEach(async () => {
         vi.clearAllMocks();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        vi.mocked(puppeteer.launch).mockResolvedValue(mockBrowser as any);
         crawler = new PttCrawler();
     });
 
@@ -102,12 +98,11 @@ describe('PttCrawler - Mock Test', () => {
         });
 
         it('should create a new page and set up request interception', async () => {
-            const { browser, page } = await getMocks();
             await crawler.init();
-            expect(browser.newPage).toHaveBeenCalled();
-            expect(page.setDefaultNavigationTimeout).toHaveBeenCalledWith(5000);
-            expect(page.setRequestInterception).toHaveBeenCalledWith(true);
-            expect(page.on).toHaveBeenCalledWith('request', expect.any(Function));
+            expect(mockBrowser.newPage).toHaveBeenCalled();
+            expect(mockPage.setDefaultNavigationTimeout).toHaveBeenCalledWith(5000);
+            expect(mockPage.setRequestInterception).toHaveBeenCalledWith(true);
+            expect(mockPage.on).toHaveBeenCalledWith('request', expect.any(Function));
         });
     });
 
@@ -131,6 +126,9 @@ describe('PttCrawler - Mock Test', () => {
 
         beforeEach(async () => {
             await crawler.init();
+            // Reset mocks to a default successful state before each test
+            vi.mocked(mockPage.goto).mockResolvedValue(undefined);
+            vi.mocked(mockPage.waitForSelector).mockResolvedValue(undefined);
         });
 
         it('should throw an error if crawl is called before init', async () => {
@@ -140,15 +138,19 @@ describe('PttCrawler - Mock Test', () => {
             );
         });
 
+        it('should throw an error if page.goto fails', async () => {
+            vi.mocked(mockPage.goto).mockRejectedValue(new Error('Timeout'));
+            await expect(crawler.crawl({ board: 'TestBoard' })).rejects.toThrow('Timeout');
+        });
+
         it('should crawl a single page and return merged data', async () => {
-            const { page } = await getMocks();
-            vi.mocked(page.evaluate).mockResolvedValue(mockPage1Data);
+            vi.mocked(mockPage.evaluate).mockResolvedValue(mockPage1Data);
 
             const result = await crawler.crawl({ board: 'TestBoard', pages: 1 });
 
-            expect(page.goto).toHaveBeenCalledWith('https://www.ptt.cc/bbs/TestBoard/index.html', expect.any(Object));
-            expect(page.evaluate).toHaveBeenCalledTimes(1);
-            
+            expect(mockPage.goto).toHaveBeenCalledWith('https://www.ptt.cc/bbs/TestBoard/index.html', expect.any(Object));
+            expect(mockPage.evaluate).toHaveBeenCalledTimes(1);
+
             const expected: MergedPages = {
                 titles: ['[閒聊] 今天天氣真好', '[公告] 板規'],
                 urls: ['http://ptt.cc/post2', 'http://ptt.cc/post1'],
@@ -161,17 +163,22 @@ describe('PttCrawler - Mock Test', () => {
         });
 
         it('should crawl multiple pages and merge results correctly', async () => {
-            const { page } = await getMocks();
-            vi.mocked(page.evaluate)
-                .mockResolvedValueOnce(mockPage1Data) // Newest page
-                .mockResolvedValueOnce(undefined) // For clicking the "previous page" button
-                .mockResolvedValueOnce(mockPage2Data); // Older page after clicking 'previous'
+            let scrapeCallCount = 0;
+            vi.mocked(mockPage.evaluate).mockImplementation(async (_fn, ...args) => {
+                // Distinguish calls by their signature. The scraping call has a boolean argument.
+                if (args.length > 0) {
+                    scrapeCallCount++;
+                    return scrapeCallCount === 1 ? mockPage1Data : mockPage2Data;
+                }
+                // The navigation call has no extra arguments.
+                return undefined;
+            });
 
             const result = await crawler.crawl({ board: 'TestBoard', pages: 2 });
 
-            expect(page.goto).toHaveBeenCalledTimes(1);
-            expect(page.evaluate).toHaveBeenCalledTimes(3); // 1 for initial page, 1 for clicking prev, 1 for second page
-            
+            expect(mockPage.goto).toHaveBeenCalledTimes(1);
+            expect(mockPage.evaluate).toHaveBeenCalledTimes(3); // 1 for initial page, 1 for clicking prev, 1 for second page
+
             const expected: MergedPages = {
                 titles: ['[閒聊] 今天天氣真好', '[公告] 板規', '[情報] 某某商店特價'],
                 urls: ['http://ptt.cc/post2', 'http://ptt.cc/post1', 'http://ptt.cc/post3'],
@@ -184,25 +191,22 @@ describe('PttCrawler - Mock Test', () => {
         });
 
         it('should handle the "over 18" button if it exists', async () => {
-            const { page } = await getMocks();
             const mockButton = { click: vi.fn() };
-            
+
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            vi.mocked(page.$).mockResolvedValue(mockButton as any);
-            vi.mocked(page.evaluate).mockResolvedValue(mockPage1Data);
+            vi.mocked(mockPage.$).mockResolvedValue(mockButton as any);
+            vi.mocked(mockPage.evaluate).mockResolvedValue(mockPage1Data);
 
             await crawler.crawl({ board: 'Gossiping' });
 
-            expect(page.$).toHaveBeenCalledWith('.over18-button-container');
+            expect(mockPage.$).toHaveBeenCalledWith('.over18-button-container');
             expect(mockButton.click).toHaveBeenCalled();
-            expect(page.waitForNavigation).toHaveBeenCalled();
+            expect(mockPage.waitForNavigation).toHaveBeenCalled();
         });
 
         it('should fetch contents when getContents is true', async () => {
-            const { page } = await getMocks();
-            
             // Mock for the main crawl, and then for the content scraping
-            vi.mocked(page.evaluate)
+            vi.mocked(mockPage.evaluate)
                 .mockResolvedValueOnce(mockPage1Data) // For the main page list
                 .mockResolvedValueOnce('Content for post1') // Corresponds to the last URL popped ('.../post1')
                 .mockResolvedValueOnce('Content for post2'); // Corresponds to the first URL popped ('.../post2')
@@ -214,18 +218,49 @@ describe('PttCrawler - Mock Test', () => {
 
             // Note: The order depends on the reversed URLs from the merged result
             expect(result.contents).toEqual(['Content for post2', 'Content for post1']);
-            expect(page.goto).toHaveBeenCalledWith('https://www.ptt.cc/bbs/TestBoard/index.html', expect.any(Object));
-            expect(page.goto).toHaveBeenCalledWith('http://ptt.cc/post2', expect.any(Object));
-            expect(page.goto).toHaveBeenCalledWith('http://ptt.cc/post1', expect.any(Object));
+            expect(mockPage.goto).toHaveBeenCalledWith('https://www.ptt.cc/bbs/TestBoard/index.html', expect.any(Object));
+            expect(mockPage.goto).toHaveBeenCalledWith('http://ptt.cc/post2', expect.any(Object));
+            expect(mockPage.goto).toHaveBeenCalledWith('http://ptt.cc/post1', expect.any(Object));
+        });
+
+        it('should call onProgress callback during crawling', async () => {
+            const onProgressMock = vi.fn();
+            vi.mocked(mockPage.evaluate).mockResolvedValue(mockPage1Data);
+
+            await crawler.crawl({ board: 'TestBoard', pages: 2, onProgress: onProgressMock });
+
+            expect(onProgressMock).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: 'crawling_pages',
+                    current: 1,
+                    total: 2,
+                })
+            );
+            expect(onProgressMock).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: 'crawling_pages',
+                    current: 2,
+                    total: 2,
+                })
+            );
+            expect(onProgressMock.mock.calls.length).toBe(2);
+        });
+
+        it('should pass skipPBs option to evaluate function', async () => {
+            vi.mocked(mockPage.evaluate).mockResolvedValue(mockPage1Data);
+
+            await crawler.crawl({ board: 'TestBoard', pages: 1, skipPBs: false });
+
+            // Verify that _scrapingOnePage was called with the second argument as false
+            expect(mockPage.evaluate).toHaveBeenCalledWith(expect.any(Function), false);
         });
     });
 
     describe('Closing', () => {
         it('should close the browser when close is called', async () => {
-            const { browser } = await getMocks();
             await crawler.init();
             await crawler.close();
-            expect(browser.close).toHaveBeenCalled();
+            expect(mockBrowser.close).toHaveBeenCalled();
         });
 
         it('should not throw an error if close is called without init', async () => {
