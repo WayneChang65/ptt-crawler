@@ -10,21 +10,21 @@
   ],
   "directories": {
     "lib": "dist",
-    "example": "src/examples",
-    "test": "src/test"
+    "example": "examples",
+    "test": "test"
   },
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist",
     "clean:results": "rm results-*.json",
-    "test": "vitest run src/test/ptt_crawler.???.mock.test.ts",
-    "test:e2e": "vitest run src/test/ptt_crawler.???.e2e.test.ts",
+    "test": "vitest run test/ptt_crawler.???.mock.test.ts",
+    "test:e2e": "vitest run test/ptt_crawler.???.e2e.test.ts",
     "test:all": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint . --ext .ts",
-    "start": "tsx src/examples/demo.ts",
-    "start-curr": "tsx src/examples/demo_curr.ts",
-    "start-cjs": "node src/examples/demo.cjs",
+    "start": "tsx examples/demo.ts",
+    "start-curr": "tsx examples/demo_curr.ts",
+    "start-cjs": "node examples/demo.cjs",
     "prepublishOnly": "npm run build"
   },
   "repository": {

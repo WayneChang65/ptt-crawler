@@ -1,5 +1,5 @@
 import { test, expect } from 'vitest';
-import { PttCrawler } from '../index.js';
+import { PttCrawler } from '../src/index';
 
 test('1. Test for default Options ', async () => {
     const ptt_crawler = new PttCrawler();

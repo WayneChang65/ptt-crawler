@@ -1,4 +1,4 @@
-import { PttCrawler, MergedPages, InitOptions, CrawlerOptions, DebugOptions } from '../index.js';
+import { PttCrawler, MergedPages, InitOptions, CrawlerOptions, DebugOptions } from '../src/index';
 import { log as fmlog } from '@waynechang65/fml-consolelog';
 import { performance } from 'perf_hooks';
 import prettyMs from 'pretty-ms';

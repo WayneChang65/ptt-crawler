@@ -1,7 +1,7 @@
 
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { initialize, getResults, close } from '../ptt_crawler';
-import type { MergedPages } from '../ptt_crawler';
+import { initialize, getResults, close } from '../src/index';
+import type { MergedPages } from '../src/index';
 
 // Mock external dependencies
 const mockPage = {

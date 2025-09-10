@@ -1,6 +1,6 @@
 
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { PttCrawler, type MergedPages } from '../ptt_crawler';
+import { PttCrawler, type MergedPages } from '../src/index';
 
 // Mock external dependencies
 const mockPage = {
