@@ -6,42 +6,9 @@ import os from 'os';
 import { log as fmlog } from '@waynechang65/fml-consolelog';
 import isInsideDocker from 'is-docker';
 import * as fs from 'fs/promises';
-import { retry, HandleError, HandleTimeout, CalculateDelay, BeforeAttempt } from '@lifeomic/attempt';
+import { retry, AttemptOptions } from '@lifeomic/attempt';
 
 puppeteer.use(StealthPlugin());
-
-/**
- * Options for retry setting of PPT crawler.
- * See more details from {@link https://github.com/lifeomic/attempt#options}.
- */
-export interface RetryOptions {
-    /** The time to wait before the first attempt in milliseconds. */
-    delay: number;
-    /** The maximum number of attempts. */
-    maxAttempts: number;
-    /** The initial time to wait between attempts in milliseconds. */
-    initialDelay?: number;
-    /** The minimum time to wait between attempts in milliseconds. */
-    minDelay?: number;
-    /** The maximum time to wait between attempts in milliseconds. */
-    maxDelay?: number;
-    /** The factor to multiply the delay by before the next attempt. */
-    factor?: number;
-    /** The maximum time to wait for an attempt in milliseconds. */
-    timeout?: number;
-    /** Whether to jitter the delay. */
-    jitter?: boolean;
-    /** Whether to jitter the initial delay. */
-    initialJitter?: boolean;
-    /** A function to handle errors. */
-    handleError?: HandleError<void>;
-    /** A function to handle timeouts. */
-    handleTimeout?: HandleTimeout<void>;
-    /** A function to run before each attempt. */
-    beforeAttempt?: BeforeAttempt<void>;
-    /** A function to calculate the delay between attempts. */
-    calculateDelay?: CalculateDelay<void>;
-}
 
 /**
  * Options for debug setting of PPT crawler.
@@ -68,7 +35,7 @@ export interface InitOptions {
     /** The debug options. */
     debug?: DebugOptions;
     /** The retry options. */
-    retry?: RetryOptions;
+    retry?: AttemptOptions<void>;
 }
 
 /**
@@ -165,7 +132,7 @@ export class PttCrawler {
         printWorkersInfo: false,
         printCrawlInfo: false,
     };
-    private retryOpt: RetryOptions = {
+    private retryOpt: AttemptOptions<void> = {
         delay: 2000,
         maxAttempts: 10,
     };
@@ -199,8 +166,7 @@ export class PttCrawler {
                     'The OS is ' + this.this_os,
                     insideDocker ? '[ Inside a container ]' : '[ Not inside a container ]',
                 ]);
-            }
-            const defaultLaunchOpts: LaunchOptions =
+            }            const defaultLaunchOpts: LaunchOptions = 
                 this.this_os === 'linux'
                     ? {
                           headless: true,
