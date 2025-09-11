@@ -25,6 +25,8 @@
     "start": "tsx examples/demo.ts",
     "start-curr": "tsx examples/demo_curr.ts",
     "start-cjs": "node examples/demo.cjs",
+    "fmt": "npx prettier --write .",
+    "fmt:check": "npx prettier --check .",
     "prepublishOnly": "npm run build"
   },
   "repository": {
