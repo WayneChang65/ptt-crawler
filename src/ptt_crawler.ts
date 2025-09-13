@@ -109,6 +109,16 @@ export interface MergedPages {
     contents?: string[];
 }
 
+export interface Post {
+    title: string;
+    url: string;
+    rate: string;
+    author: string;
+    date: string;
+    mark: string;
+    content?: string;
+}
+
 /**
  * A class to crawl posts from a PTT board.
  */
@@ -166,7 +176,8 @@ export class PttCrawler {
                     'The OS is ' + this.this_os,
                     insideDocker ? '[ Inside a container ]' : '[ Not inside a container ]',
                 ]);
-            }            const defaultLaunchOpts: LaunchOptions = 
+            }
+            const defaultLaunchOpts: LaunchOptions =
                 this.this_os === 'linux'
                     ? {
                           headless: true,
@@ -508,6 +519,39 @@ export class PttCrawler {
             await this.browser.close();
             this.browser = undefined;
         }
+    }
+
+    /**
+    * Transforms the crawled data from a struct of arrays to an array of post objects.
+    * @param {MergedPages} results The MergedPages object from the crawl() method.
+    * @returns {Post[]} An array of Post objects.
+    */
+    resultsToObjects(results: MergedPages): Post[] {
+        const posts: Post[] = [];
+        const postCount = results.titles.length;
+
+        if (postCount === 0) return [];
+
+        for (let i = 0; i < postCount; i++) {
+            const post: Post = {
+                title: results.titles[i],
+                url: results.urls[i],
+                rate: results.rates[i],
+                author: results.authors[i],
+                date: results.dates[i],
+                mark: results.marks[i],
+            };
+
+            // 如果有內文，也一併加入
+            if (results.contents && results.contents[i]) {
+                post.content = results.contents[i];
+            }
+            posts.push(post);
+        }
+        if (this.debug.enable && this.debug.saveResultToFiles) {
+            this._saveObjToFile(posts, `results-${posts.length}-resultToObjects.json`);
+        }
+        return posts;
     }
 }
 

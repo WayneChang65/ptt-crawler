@@ -282,6 +282,12 @@ npm run test:e2e
 
 * `close()`: 關閉爬蟲並釋放資源 (close the crawler and release resources).  
 
+* `resultsToObjects(results)`: 將爬取到的資料從陣列結構轉換為物件陣列
+ (transform the crawled data from a struct of arrays to an array of post objects).
+  * `results` (`MergedPages`): `crawl()` 方法回傳的 `MergedPages` 物件
+ (The `MergedPages` object returned from the `crawl()` method).
+  * **Returns:** `Post[]` - `Post` 物件的陣列 (An array of `Post` objects).
+
 ## 錯誤處理 (Error Handling)  
 
 在使用 `crawl()` 函式時，建議使用 `try...catch` 區塊包覆，

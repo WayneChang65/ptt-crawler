@@ -1,82 +1,82 @@
 {
-  "name": "@waynechang65/ptt-crawler",
-  "version": "3.1.0",
-  "description": "A web crawler module designed to scarp data from Ptt.",
-  "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "files": [
-    "dist/**"
-  ],
-  "directories": {
-    "lib": "dist",
-    "example": "examples",
-    "test": "test"
-  },
-  "scripts": {
-    "build": "tsc",
-    "clean": "rm -rf dist",
-    "clean:results": "rm results-*.json",
-    "test": "vitest run test/ptt_crawler.???.mock.test.ts",
-    "test:e2e": "vitest run test/ptt_crawler.???.e2e.test.ts",
-    "test:all": "vitest run",
-    "test:watch": "vitest",
-    "lint": "npm run lint:es && npm run lint:md",
-    "lint:es": "eslint . --ext .ts",
-    "lint:md": "npx markdownlint-cli2 '*.md' 'benchmarks/*.md'",
-    "start": "tsx examples/demo.ts",
-    "start-curr": "tsx examples/demo_curr.ts",
-    "start-cjs": "node examples/demo.cjs",
-    "fmt": "npx prettier --write .",
-    "fmt:check": "npx prettier --check .",
-    "prepublishOnly": "npm run build"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/WayneChang65/ptt-crawler.git"
-  },
-  "keywords": [
-    "ptt",
-    "crawler",
-    "spider",
-    "scrape",
-    "批踢踢",
-    "BBS",
-    "nodejs",
-    "typescript",
-    "javascript"
-  ],
-  "author": "WayneChang65",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/WayneChang65/ptt-crawler/issues"
-  },
-  "homepage": "https://github.com/WayneChang65/ptt-crawler#readme",
-  "dependencies": {
-    "@lifeomic/attempt": "^3.1.0",
-    "@waynechang65/fml-consolelog": "^1.2.2",
-    "is-docker": "^3.0.0",
-    "puppeteer": "^24.15.0",
-    "puppeteer-extra": "^3.3.6",
-    "puppeteer-extra-plugin-stealth": "^2.11.2"
-  },
-  "devDependencies": {
-    "@types/node": "^24.1.0",
-    "@types/user-agents": "^1.0.4",
-    "@typescript-eslint/eslint-plugin": "^8.36.0",
-    "@typescript-eslint/parser": "^8.36.0",
-    "eslint": "^8.57.0",
-    "eslint-config-prettier": "^10.1.5",
-    "pixl-cli": "^1.0.21",
-    "prettier": "^3.6.2",
-    "pretty-ms": "^9.2.0",
-    "tsx": "^4.20.3",
-    "typescript": "^5.8.3",
-    "vitest": "^3.2.4"
-  },
-  "overrides": {
-    "vitest": {
-      "rollup": "npm:@rollup/wasm-node"
+    "name": "@waynechang65/ptt-crawler",
+    "version": "3.1.0",
+    "description": "A web crawler module designed to scarp data from Ptt.",
+    "type": "module",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "files": [
+        "dist/**"
+    ],
+    "directories": {
+        "lib": "dist",
+        "example": "examples",
+        "test": "test"
+    },
+    "scripts": {
+        "build": "tsc",
+        "clean": "rm -rf dist",
+        "clean:results": "rm results-*.json",
+        "test": "vitest run test/ptt_crawler.???.mock.test.ts",
+        "test:e2e": "vitest run test/ptt_crawler.???.e2e.test.ts",
+        "test:all": "vitest run",
+        "test:watch": "vitest",
+        "lint": "npm run lint:es && npm run lint:md",
+        "lint:es": "eslint . --ext .ts",
+        "lint:md": "npx markdownlint-cli2 '*.md' 'benchmarks/*.md'",
+        "start": "tsx examples/demo.ts",
+        "start-curr": "tsx examples/demo_curr.ts",
+        "start-cjs": "node examples/demo.cjs",
+        "fmt": "npx prettier --write .",
+        "fmt:check": "npx prettier --check .",
+        "prepublishOnly": "npm run build"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/WayneChang65/ptt-crawler.git"
+    },
+    "keywords": [
+        "ptt",
+        "crawler",
+        "spider",
+        "scrape",
+        "批踢踢",
+        "BBS",
+        "nodejs",
+        "typescript",
+        "javascript"
+    ],
+    "author": "WayneChang65",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/WayneChang65/ptt-crawler/issues"
+    },
+    "homepage": "https://github.com/WayneChang65/ptt-crawler#readme",
+    "dependencies": {
+        "@lifeomic/attempt": "^3.1.0",
+        "@waynechang65/fml-consolelog": "^1.2.2",
+        "is-docker": "^3.0.0",
+        "puppeteer": "^24.15.0",
+        "puppeteer-extra": "^3.3.6",
+        "puppeteer-extra-plugin-stealth": "^2.11.2"
+    },
+    "devDependencies": {
+        "@types/node": "^24.1.0",
+        "@types/user-agents": "^1.0.4",
+        "@typescript-eslint/eslint-plugin": "^8.36.0",
+        "@typescript-eslint/parser": "^8.36.0",
+        "eslint": "^8.57.0",
+        "eslint-config-prettier": "^10.1.5",
+        "pixl-cli": "^1.0.21",
+        "prettier": "^3.6.2",
+        "pretty-ms": "^9.2.0",
+        "tsx": "^4.20.3",
+        "typescript": "^5.8.3",
+        "vitest": "^3.2.4"
+    },
+    "overrides": {
+        "vitest": {
+            "rollup": "npm:@rollup/wasm-node"
+        }
     }
-  }
 }

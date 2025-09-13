@@ -1,6 +1,6 @@
 
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { PttCrawler, type MergedPages } from '../src/index';
+import { PttCrawler, type MergedPages, type Post } from '../src/index';
 
 // Mock external dependencies
 const mockPage = {
@@ -253,6 +253,82 @@ describe('PttCrawler - Mock Test', () => {
 
             // Verify that _scrapingOnePage was called with the second argument as false
             expect(mockPage.evaluate).toHaveBeenCalledWith(expect.any(Function), false);
+        });
+    });
+
+    describe('resultsToObjects', () => {
+        it('should transform MergedPages to an array of Post objects', () => {
+            const mergedPages: MergedPages = {
+                titles: ['Title 1', 'Title 2'],
+                urls: ['url1', 'url2'],
+                rates: ['10', '爆'],
+                authors: ['author1', 'author2'],
+                dates: ['1/01', '1/02'],
+                marks: ['', 'M'],
+            };
+
+            const result = crawler.resultsToObjects(mergedPages);
+
+            const expected: Post[] = [
+                {
+                    title: 'Title 1',
+                    url: 'url1',
+                    rate: '10',
+                    author: 'author1',
+                    date: '1/01',
+                    mark: '',
+                },
+                {
+                    title: 'Title 2',
+                    url: 'url2',
+                    rate: '爆',
+                    author: 'author2',
+                    date: '1/02',
+                    mark: 'M',
+                },
+            ];
+            expect(result).toEqual(expected);
+        });
+
+        it('should include content if it exists in the input', () => {
+            const mergedPages: MergedPages = {
+                titles: ['Title 1'],
+                urls: ['url1'],
+                rates: ['10'],
+                authors: ['author1'],
+                dates: ['1/01'],
+                marks: [''],
+                contents: ['Content 1'],
+            };
+
+            const result = crawler.resultsToObjects(mergedPages);
+
+            const expected: Post[] = [
+                {
+                    title: 'Title 1',
+                    url: 'url1',
+                    rate: '10',
+                    author: 'author1',
+                    date: '1/01',
+                    mark: '',
+                    content: 'Content 1',
+                },
+            ];
+            expect(result).toEqual(expected);
+        });
+
+        it('should return an empty array if input has no titles', () => {
+            const mergedPages: MergedPages = {
+                titles: [],
+                urls: [],
+                rates: [],
+                authors: [],
+                dates: [],
+                marks: [],
+            };
+
+            const result = crawler.resultsToObjects(mergedPages);
+            expect(result).toEqual([]);
         });
     });
 
