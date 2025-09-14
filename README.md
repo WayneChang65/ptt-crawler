@@ -120,7 +120,7 @@ This module is optimized for Linux, including Docker
       // debug: Enable/configure debug options (default: false)
       // retry: 開啟/設定重試選項 (預設 delay: 2000, maxAttempts: 10)
       // retry: Enable/configure retry options (default: delay: 2000, 
-      maxAttempts: 10)
+      //        maxAttempts: 10)
       await pttCrawler.init({
           concurrency: 5,
           debug: { enable: true, printRetryInfo: true },
@@ -135,7 +135,7 @@ This module is optimized for Linux, including Docker
           getContents: true,
           onProgress: (progress) => {
               // e.g., { type: 'crawling_pages', message: 'Crawling page 1 of 3...',
-              // current: 1, total: 3, percent: 33.33 }
+              //         current: 1, total: 3, percent: 33.33 }
               console.log(`${progress.message} ${progress.percent.toFixed(2)}%`);
           }
       });
@@ -168,17 +168,36 @@ This module is optimized for Linux, including Docker
   }
   ```
 
+* 或者是可以透過 `resultsToObjects()` 轉成物件陣列格式(Post[])，以便使用forEach、Map、...等陣列函式操作：  
+  Alternatively, you can convert it into an array of objects (Post[]) using `resultsToObjects()`,
+  in order to use array functions like forEach, Map, etc.  
+
+  ```typescript
+  // 回傳的物件會實作 Post interface
+  // The return value is an object that implements the Post interface.
+  interface Post {
+    title: string;
+    url: string;
+    rate: string;
+    author: string;
+    date: string;
+    mark: string;
+    content?: string;
+  }
+  ```  
+
 **欄位說明 (Field Descriptions):**  
 
 * `rates`: 推文數。可能的文字為 `'爆'`、`'XX'` (X1, X2...) 或數字。  
-  `rates`: The recommendation count. Possible values include `'爆'` (viral),  
+  `rates`: The recommendation count. Possible values include `'爆'` (viral),
   `'XX'` (e.g., X1, X2), or a number.  
 * `marks`: 文章標記。例如 `'M'` (標記)、`'S'` (鎖定) 等。  
   `marks`: Post markers, such as `'M'` (marked) or `'S'` (locked).  
 * `contents`: 當 `getContents` 為 `true` 時才會包含此欄位，
 陣列中的每個元素是一篇文章的完整內文（包含留言）。  
-  `contents`: This field is only included when `getContents` is `true`.  
-  Each element in the array is the full content of a post, including comments.  
+  `contents`: This field is only included when `getContents` is `true`.
+   Each element in the array is the full content of a post,
+ including comments.  
 
 ## 如何跑範例程式？ (How to run the example ?)  
 
@@ -240,9 +259,18 @@ npm run test:e2e
 
 * `init(options)`: 初始化爬蟲 (initialize the crawler).  
   * `options`:  
-    * `concurrency` (number): 爬取內文時的並行數量。**預設值: `5`**。  
-      The number of concurrent requests for scraping
-      contents. **Default: `5`**.  
+    * `concurrency` (number): 爬取內文時的併發數量。基本上，併發的設定越高，
+資料爬取時所使用的平行處理就會越多。理論上，這應該能提升效率並縮短完成時間。然而，
+如果併發數值設定得太高，而電腦的處理能力又有限，效率可能不僅無法顯著提升，
+記憶體的消耗反而會增加。因此，這個數值應該根據可用的系統資源來進行調整。**預設值: `5`**。  
+      The number of concurrent requests for scraping contents.
+ Basically, the higher the concurrency setting, the more parallel processing
+will be used for data crawling. In theory, this should improve efficiency
+and shorten the completion time. However, if the concurrency value is set
+too high and the computer’s processing power is limited, efficiency may
+not improve significantly and memory consumption could increase instead.
+Therefore, this value should be adjusted based on the available system
+resources. **Default: `5`**.  
     * `debug` (DebugOptions): 除錯參數設定物件。  
       An object to configure debug settings.  
       * `enable` (boolean): 啟動或關閉除錯模式。**預設值: `false`**。  
@@ -255,13 +283,16 @@ npm run test:e2e
         Print concurrent worker status. **Default: `false`**.  
       * `saveResultToFiles` (boolean): 將爬蟲結果存成檔案。**預設值: `false`**。  
         Save the final results to a JSON file. **Default: `false`**.  
-    * `retry` (AttemptOptions): 重試參數設定物件。
-詳見 [attempt](https://github.com/lifeomic/attempt#options).  
-      An object to configure retry settings.
-      See more details from
-       [attempt](https://github.com/lifeomic/attempt#options).  
-      * `delay` (number): 第一次重試前等待的毫秒數。**預設值: `2000`**。  
-        The time to wait before the first attempt in milliseconds.  
+    * `retry` (AttemptOptions): 重試參數設定物件。這機能很重要，
+特別是網路不穩定的時候可以透過重試機制讓流程不致於中斷，
+至於要設定重試一次等多久或是要重試幾次，還是得看容許度跟需求。  
+      An object to configure retry settings. This feature is very important,
+ especially when the network is unstable,
+ as it uses a retry mechanism to prevent the process from being interrupted.
+ As for how long to wait between retries or how many times to retry,
+ that should be configured based on tolerance and specific requirements.  
+      * `delay` (number): 重試等待的毫秒數。**預設值: `2000`**。  
+        The time to attempt in milliseconds.  
         **Default: `2000`**.  
       * `maxAttempts` (number): 最大重試次數。**預設值: `10`**。  
         The maximum number of attempts. **Default: `10`**.  
