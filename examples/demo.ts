@@ -6,7 +6,7 @@ import prettyMs from 'pretty-ms';
 import cli from 'pixl-cli';
 
 const debugOpt: DebugOptions = {
-    enable: true,
+    enable: false,
     saveResultToFiles: true,
     printCrawlInfo: false,
     printRetryInfo: true,

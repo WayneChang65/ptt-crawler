@@ -6,7 +6,7 @@ const prettyMs = require('pretty-ms').default;
 const cli = require('pixl-cli');
 
 const debugOpt = {
-    enable: true,
+    enable: false,
     saveResultToFiles: true,
     printCrawlInfo: false,
     printRetryInfo: true,

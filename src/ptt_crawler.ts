@@ -474,9 +474,9 @@ export class PttCrawler {
                         ]);
                     }
                     // 這裏沒有 throw e，主要是思考到如果中間有一個網頁出狀況，整個抓的結果就白費了
-                    // 因此，真的有特定網頁抓不到，就塞個 Error fetching訊息，讓要用的人自己斟酌是否重抓
+                    // 因此，真的有特定網頁抓不到，就塞個 Error fetching訊息，讓要用的人自己判斷與斟酌是否重抓
+                    results[idx] = `Error fetching content for ${url}: ${String(e)}`;
                     // throw e;
-                    results[idx] = `Error fetching content: ${url}`;
                 }
             }
         };
