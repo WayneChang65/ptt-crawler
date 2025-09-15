@@ -1,8 +1,18 @@
-const { PttCrawler } = require('../../dist/index.js');
-const ptt_crawler = require('../../dist/index.js');
-const fmlog = require('@waynechang65/fml-consolelog').log;
-const { performance } = require('perf_hooks');
-const prettyMs = require('pretty-ms').default;
+import { PttCrawler, MergedPages, InitOptions, CrawlerOptions, Progress, DebugOptions } from '../src/index.js';
+import * as ptt_crawler from '../src/index.js';
+import { log as fmlog } from '@waynechang65/fml-consolelog';
+import { performance } from 'perf_hooks';
+import prettyMs from 'pretty-ms';
+import cli from 'pixl-cli';
+
+const debugOpt: DebugOptions = {
+    enable: false,
+    saveResultToFiles: true,
+    printCrawlInfo: false,
+    printRetryInfo: true,
+    printWorkersInfo: false
+};
+const headLess = true;
 
 main();
 
@@ -17,28 +27,34 @@ resources. The current default setting is 5.
 */
 
 async function main() {
+    cli.progress.start({ freq: 50, width: 50 });
     await run_oop();
     await run_mop();
+    cli.progress.end();
 }
 
 async function run_oop() {
     const startTime = performance.now();
-    const initOpt_1 = {
+    const initOpt_1: InitOptions = {
         concurrency: 3,
-        debug: true
-    }
-    const crawler1 = new PttCrawler();
-    const crawler2 = new PttCrawler();
+        debug: debugOpt,
+    };
+    const initOpt_2: InitOptions = {
+        concurrency: 10,
+        debug: debugOpt,
+    };
+    const crawler1 = new PttCrawler({ headless: headLess });
+    const crawler2 = new PttCrawler({ headless: headLess });
     try {
         // *** Initialize ***
         await crawler1.init(initOpt_1);
-        await crawler2.init({ concurrency: 10 });
+        await crawler2.init(initOpt_2);
 
         // *** GetResult  ***
-        let ptt;
-        let crawlOpt;
-        
-         // 爬 tos 版, 爬 1 頁, 保留置底文, 不爬內文
+        let ptt: MergedPages;
+        let crawlOpt: CrawlerOptions;
+
+        // 爬 tos 版, 爬 1 頁, 保留置底文, 不爬內文
         ptt = await crawler1.crawl();
         consoleOut('Tos', 1, ptt);
 
@@ -48,18 +64,20 @@ async function run_oop() {
             pages: 2,
             skipPBs: true,
             getContents: true,
-        }
-        ptt = await crawler1.crawl(crawlOpt); 
-        consoleOut(crawlOpt.board, crawlOpt.pages, ptt);
+            onProgress: handleProgress,
+        };
+        ptt = await crawler1.crawl(crawlOpt);
+        consoleOut(crawlOpt.board as string, crawlOpt.pages as number, ptt);
 
         // 爬 PokemonGO版, 爬 5 頁, 留下置底文, 爬內文
         crawlOpt = {
             board: 'PokemonGO',
             pages: 5,
             getContents: true,
-        }
-        ptt = await crawler2.crawl(crawlOpt); 
-        consoleOut(crawlOpt.board, crawlOpt.pages, ptt);
+            onProgress: handleProgress,
+        };
+        ptt = await crawler2.crawl(crawlOpt);
+        consoleOut(crawlOpt.board as string, crawlOpt.pages as number, ptt);
         showOneContent(ptt);
     } catch (error) {
         console.error('ptt_crawer fail:', error);
@@ -76,15 +94,16 @@ async function run_mop() {
     const startTime = performance.now();
     try {
         // *** Initialize ***
-        await ptt_crawler.initialize();
+        await ptt_crawler.initialize({ headless: headLess });
 
         // *** GetResult  ***
-        let ptt;
+        let ptt: MergedPages;
 
         // 爬 ToS 版, 爬 3 頁, 去除置底文, 不爬內文
         ptt = await ptt_crawler.getResults({
             pages: 3,
             skipPBs: true,
+            onProgress: handleProgress,
         });
         consoleOut('Tos', 3, ptt);
 
@@ -93,6 +112,7 @@ async function run_mop() {
             board: 'gossiping',
             pages: 2,
             getContents: true,
+            onProgress: handleProgress,
         });
         consoleOut('Gossiping', 2, ptt);
         showOneContent(ptt);
@@ -109,7 +129,7 @@ async function run_mop() {
 //////////////////////////////////////////
 ///           Console Out              ///
 //////////////////////////////////////////
-function consoleOut(_scrapingBoard, _scrapingPages, ptt) {
+function consoleOut(_scrapingBoard: string, _scrapingPages: number, ptt: MergedPages) {
     console.log(`
 +-----------------------------------------
   Board Name = ${_scrapingBoard}, 
@@ -127,7 +147,7 @@ function consoleOut(_scrapingBoard, _scrapingPages, ptt) {
     }
 }
 
-function showOneContent(ptt) {
+function showOneContent(ptt: MergedPages) {
     console.log(
         `
 
@@ -137,3 +157,11 @@ ${ptt.contents?.[0]}
 `
     );
 }
+
+const handleProgress = (progress: Progress) => {
+    //cli.print(cli.box(progress.message) + '\n');
+    cli.progress.update({
+        amount: progress.percent / 100,
+        text: progress.message,
+    });
+};

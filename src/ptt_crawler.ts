@@ -6,10 +6,38 @@ import os from 'os';
 import { log as fmlog } from '@waynechang65/fml-consolelog';
 import isInsideDocker from 'is-docker';
 import * as fs from 'fs/promises';
+import { retry, AttemptOptions } from '@lifeomic/attempt';
+import hot from './hot.json' with { type: 'json' };
 
 puppeteer.use(StealthPlugin());
 
-const stopSelector = '#main-container > div.r-list-container.action-bar-margin.bbs-screen';
+/**
+ * Options for debug setting of PPT crawler.
+ */
+export interface DebugOptions {
+    /** Whether to enable debug mode. */
+    enable?: boolean;
+    /** Whether to save the result to files. */
+    saveResultToFiles?: boolean;
+    /** Whether to print retry information. */
+    printRetryInfo?: boolean;
+    /** Whether to print workers information. */
+    printWorkersInfo?: boolean;
+    /** Whether to print crawl information. */
+    printCrawlInfo?: boolean;
+}
+
+/**
+ * Options for the initial of PPT crawler.
+ */
+export interface InitOptions {
+    /** The number of concurrent requests. */
+    concurrency?: number;
+    /** The debug options. */
+    debug?: DebugOptions;
+    /** The retry options. */
+    retry?: AttemptOptions<void>;
+}
 
 /**
  * Options for the PTT crawler.
@@ -23,14 +51,24 @@ export interface CrawlerOptions {
     skipPBs?: undefined | boolean;
     /** Whether to fetch the content of each post. */
     getContents?: undefined | boolean;
+    /** A callback function to receive progress updates. */
+    onProgress?: (progress: Progress) => void;
 }
 
 /**
- * Options for the initial of PPT crawler.
+ * Represents the progress of the crawler.
  */
-export interface InitOptions {
-    concurrency?: number;
-    debug?: boolean;
+export interface Progress {
+    /** The type of the current operation. */
+    type: 'crawling_pages' | 'fetching_contents';
+    /** A human-readable message describing the current status. */
+    message: string;
+    /** The number of items completed so far. */
+    current: number;
+    /** The total number of items to process. */
+    total: number;
+    /** The completion percentage (0-100). */
+    percent: number;
 }
 
 /**
@@ -73,9 +111,43 @@ export interface MergedPages {
 }
 
 /**
+ * Represents a single PTT post.
+ */
+export interface Post {
+    /** The title of the post. */
+    title: string;
+    /** The URL of the post. */
+    url: string;
+    /** The recommendation count (推文數). */
+    rate: string;
+    /** The author of the post. */
+    author: string;
+    /** The date of the post. */
+    date: string;
+    /** The mark of the post (e.g., 'M', 'S'). */
+    mark: string;
+    /** The full content of the post, including comments. Only available if `getContents` is true. */
+    content?: string;
+}
+
+/**
+ * Represents a hot board on PTT.
+ */
+export interface HotBoard {
+    /** The name of the board (e.g., 'Gossiping'). */
+    name: string;
+    /** The classification of the board (e.g., '綜合', '學術'). */
+    class: string;
+    /** The title of the board (e.g., '[八卦]', '[股票]'). */
+    title: string;
+}
+
+/**
  * A class to crawl posts from a PTT board.
  */
 export class PttCrawler {
+    private readonly stopSelector = '#main-container > div.r-list-container.action-bar-margin.bbs-screen';
+    private readonly puppteerTimeout = 5000; // 5s
     private browser: Browser | undefined;
     private pages: {
         p: Page;
@@ -86,7 +158,17 @@ export class PttCrawler {
     private this_os = '';
     private getContents: boolean = false;
     private concurrency: number = 5;
-    private debug: boolean = false;
+    private debug: DebugOptions = {
+        enable: false,
+        saveResultToFiles: false,
+        printRetryInfo: false,
+        printWorkersInfo: false,
+        printCrawlInfo: false,
+    };
+    private retryOpt: AttemptOptions<void> = {
+        delay: 2000,
+        maxAttempts: 10,
+    };
 
     /**
      * Creates an instance of PttCrawler.
@@ -98,23 +180,27 @@ export class PttCrawler {
      * Initializes the crawler, launching a browser instance.
      * This must be called before any other methods.
      */
-    async init(initOption: InitOptions = { concurrency: 5, debug: false }) {
-        if (this.browser) {
-            return;
-        }
+    async init(initOption: InitOptions = { concurrency: 5, debug: undefined, retry: undefined }) {
+        if (this.browser) return;
+
         try {
             const insideDocker = isInsideDocker();
             const chromiumExecutablePath = insideDocker ? '/usr/bin/chromium' : '/usr/bin/chromium-browser';
             this.this_os = os.platform();
-            this.debug = initOption.debug as boolean;
-            if (this.debug)
+            if (initOption.debug) {
+                this.debug = { ...this.debug, ...initOption.debug };
+            }
+            if (initOption.retry) {
+                this.retryOpt = { ...this.retryOpt, ...initOption.retry };
+            }
+            if (this.debug.enable && this.debug.printCrawlInfo) {
                 fmlog('event_msg', [
                     'PTT-CRAWLER',
                     'The OS is ' + this.this_os,
                     insideDocker ? '[ Inside a container ]' : '[ Not inside a container ]',
                 ]);
-
-            const defaultLaunchOpts: LaunchOptions =
+            }
+            const defaultLaunchOpts: LaunchOptions = 
                 this.this_os === 'linux'
                     ? {
                           headless: true,
@@ -129,7 +215,7 @@ export class PttCrawler {
             this.concurrency = initOption.concurrency as number;
             for (let i = 0; i < this.concurrency; i++) {
                 const page = await this.browser.newPage();
-                await page.setDefaultNavigationTimeout(180000); // 3 mins
+                await page.setDefaultNavigationTimeout(this.puppteerTimeout);
 
                 await page.setRequestInterception(true);
                 page.on('request', (req) => {
@@ -140,7 +226,9 @@ export class PttCrawler {
                 this.pages.push({ p: page });
             }
         } catch (e) {
-            fmlog('error', ['PTT-CRAWLER', 'init error', String(e)]);
+            if (this.debug.enable && this.debug.printCrawlInfo) {
+                fmlog('error_msg', ['PTT-CRAWLER', 'init error', String(e)]);
+            }
             throw e;
         }
     }
@@ -154,10 +242,10 @@ export class PttCrawler {
         if (!this.browser) {
             throw new Error('Crawler is not initialized. Please call init() first.');
         }
-        options = options ?? {};
 
         const data_pages: CrawlerOnePage[] = [];
         const pages = typeof options.pages === 'number' && options.pages > 0 ? Math.floor(options.pages) : 1;
+        const onProgress = options.onProgress;
 
         this.scrapingBoard = options.board || 'Tos';
         this.scrapingPages = pages;
@@ -169,22 +257,45 @@ export class PttCrawler {
 
         const pttUrl = 'https://www.ptt.cc/bbs/' + this.scrapingBoard + '/index.html';
         try {
-            await page.bringToFront();
-            await page.goto(pttUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
-            const over18Button = await page.$('.over18-button-container');
-            if (over18Button) {
-                await Promise.all([
-                    over18Button.click(),
-                    page.waitForNavigation({
-                        waitUntil: 'domcontentloaded',
-                    }),
-                ]);
+            if (onProgress) {
+                onProgress({
+                    type: 'crawling_pages',
+                    message: `Crawling page 1 of ${this.scrapingPages}...`,
+                    current: 1,
+                    total: this.scrapingPages,
+                    percent: Math.round((1 / this.scrapingPages) * 100),
+                });
             }
-            await page.waitForSelector(stopSelector, { timeout: 60000 });
+            await page.bringToFront();
+            await retry(async (context) => {
+                if (this.debug.enable && this.debug.printRetryInfo) {
+                    fmlog('event_msg', [`RETRY`, `attemptNum: ${context.attemptNum}`, '']);
+                }
+                await page.goto(pttUrl, { waitUntil: 'domcontentloaded', timeout: this.puppteerTimeout });
+                const over18Button = await page.$('.over18-button-container');
+                if (over18Button) {
+                    await Promise.all([
+                        over18Button.click(),
+                        page.waitForNavigation({
+                            waitUntil: 'domcontentloaded',
+                        }),
+                    ]);
+                }
+                await page.waitForSelector(this.stopSelector, { timeout: this.puppteerTimeout });
+            }, this.retryOpt);
 
             data_pages.push(await page.evaluate(this._scrapingOnePage, this.skipBottomPosts));
 
             for (let i = 1; i < this.scrapingPages; i++) {
+                if (onProgress) {
+                    onProgress({
+                        type: 'crawling_pages',
+                        message: `Crawling page ${i + 1} of ${this.scrapingPages}...`,
+                        current: i + 1,
+                        total: this.scrapingPages,
+                        percent: Math.round((i + 1 / this.scrapingPages) * 100),
+                    });
+                }
                 /***** 點選 "上一頁" 到上一頁較舊的資料 *****/
                 await page.evaluate(() => {
                     const buttonPrePage = document.querySelector<HTMLDivElement>(
@@ -192,9 +303,12 @@ export class PttCrawler {
                     );
                     buttonPrePage?.click();
                 });
-                await page.waitForSelector(stopSelector, {
-                    timeout: 60000,
-                });
+                await retry(async (context) => {
+                    if (this.debug.enable && this.debug.printRetryInfo) {
+                        fmlog('event_msg', [`RETRY`, `attemptNum: ${context.attemptNum}`, '']);
+                    }
+                    await page.waitForSelector(this.stopSelector, { timeout: this.puppteerTimeout });
+                }, this.retryOpt);
 
                 /***** 抓取網頁資料 (上一頁) *****/
                 data_pages.push(await page.evaluate(this._scrapingOnePage, this.skipBottomPosts));
@@ -205,11 +319,13 @@ export class PttCrawler {
 
             /***** 爬各帖內文 *****/
             if (this.getContents) {
-                retObj.contents = await this._scrapingAllContents(retObj.urls, this.concurrency);
+                retObj.contents = await this._scrapingAllContents(retObj.urls, onProgress);
             }
             return retObj;
         } catch (e) {
-            fmlog('error', ['PTT-CRAWLER', 'crawl error', String(e)]);
+            if (this.debug.enable && this.debug.printCrawlInfo) {
+                fmlog('error_msg', ['PTT-CRAWLER', 'crawl error', String(e)]);
+            }
             throw e;
         }
     }
@@ -321,55 +437,85 @@ export class PttCrawler {
      * Uses multiple pages for speed and blocks unnecessary resources on each page.
      * @private
      * @param {string[]} aryHref - An array of post URLs.
-     * @param {number} concurrency - The number of concurrent requests.
      * @returns {Promise<string[]>} A promise that resolves to an array of post contents.
      */
-    private async _scrapingAllContents(aryHref: string[], concurrency: number): Promise<string[]> {
+    private async _scrapingAllContents(
+        aryHref: string[],
+        onProgress?: (progress: Progress) => void
+    ): Promise<string[]> {
         if (!this.browser) {
             throw new Error('Crawler is not initialized. Please call init() first.');
         }
         const results: string[] = new Array(aryHref.length).fill('');
         const total = aryHref.length;
+        const aryTuppleHref = [...aryHref.entries()];
 
-        const worker = async (url: string, page: Page, idxAryHref: number) => {
-            try {
-                await page.bringToFront();
-                await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+        const worker = async (page: Page, stackHref: [number, string][], idxPage?: number) => {
+            let aHref: [number, string] | undefined;
+            while ((aHref = stackHref.pop()) !== undefined) {
+                if (onProgress) {
+                    const completedCount = total - stackHref.length;
+                    onProgress({
+                        type: 'fetching_contents',
+                        message: `Fetching content ${completedCount} of ${total}...`,
+                        current: completedCount,
+                        total: total,
+                        percent: Math.round((completedCount / total) * 100),
+                    });
+                }
+                const idx = aHref[0];
+                const url = aHref[1];
+                try {
+                    await page.bringToFront();
+                    await retry(async (context) => {
+                        if (this.debug.enable && this.debug.printRetryInfo) {
+                            fmlog('event_msg', [`RETRY`, `attemptNum: ${context.attemptNum}`, '']);
+                        }
+                        await page.goto(url, {
+                            waitUntil: 'domcontentloaded',
+                            timeout: this.puppteerTimeout,
+                        });
+                    }, this.retryOpt);
+                    const content = await page.evaluate(() => {
+                        const contentSelector = '#main-content';
+                        const el = document.querySelector<HTMLDivElement>(contentSelector);
+                        if (!el) return '';
 
-                const content = await page.evaluate(() => {
-                    const contentSelector = '#main-content';
-                    const el = document.querySelector<HTMLDivElement>(contentSelector);
-                    if (!el) return '';
+                        return (el.innerText || '').trim();
+                    });
+                    results[idx] = content;
 
-                    return (el.innerText || '').trim();
-                });
-                results[idxAryHref] = content;
-            } catch (e) {
-                fmlog('warn', ['PTT-CRAWLER', `_scrapingAllContents error for ${url}`, String(e)]);
+                    if (this.debug.enable && this.debug.printWorkersInfo) {
+                        fmlog('event_msg', [`WORKER-${idxPage}`, `idx: ${idx}`, content.split('\n')[0]]);
+                    }
+                } catch (e) {
+                    if (this.debug.enable && this.debug.printCrawlInfo) {
+                        fmlog('error_msg', [
+                            'PTT-CRAWLER',
+                            `_scrapingAllContents error for ${url}`,
+                            String(e),
+                        ]);
+                    }
+                    // 這裏沒有 throw e，主要是思考到如果中間有一個網頁出狀況，整個抓的結果就白費了
+                    // 因此，真的有特定網頁抓不到，就塞個 Error fetching訊息，讓要用的人自己判斷與斟酌是否重抓
+                    results[idx] = `Error fetching content for ${url}: ${String(e)}`;
+                    // throw e;
+                }
             }
         };
 
         const workers = [];
-        let i = 0;
-        while (i * concurrency < aryHref.length) {
-            for (let j = 0; j < concurrency; j++) {
-                if (i * concurrency + j + 1 > aryHref.length) {
-                    break;
-                }
-                const idx = i * concurrency + j;
-                workers.push(worker(aryHref[idx], this.pages[j].p, idx));
-            }
-            await Promise.all(workers);
-            workers.length = 0;
-            i++;
+        for (const [idx, page] of this.pages.entries()) {
+            workers.push(worker(page.p, aryTuppleHref, idx));
         }
+        await Promise.all(workers);
 
-        if (this.debug) {
+        if (this.debug.enable && this.debug.saveResultToFiles) {
             this._saveObjToFile(results, `results-${total}-${this.scrapingBoard}.json`);
         }
         return results;
     }
-    
+
     /**
      * Saves an object to a file as a beautified JSON string.
      * @private
@@ -396,6 +542,48 @@ export class PttCrawler {
             await this.browser.close();
             this.browser = undefined;
         }
+    }
+
+    /**
+    * Transforms the crawled data from a struct of arrays to an array of post objects.
+    * @param {MergedPages} results The MergedPages object from the crawl() method.
+    * @returns {Post[]} An array of Post objects.
+    */
+    resultsToObjects(results: MergedPages): Post[] {
+        const posts: Post[] = [];
+        const postCount = results.titles.length;
+
+        if (postCount === 0) return [];
+
+        for (let i = 0; i < postCount; i++) {
+            const post: Post = {
+                title: results.titles[i],
+                url: results.urls[i],
+                rate: results.rates[i],
+                author: results.authors[i],
+                date: results.dates[i],
+                mark: results.marks[i],
+            };
+
+            // 如果有內文，也一併加入
+            if (results.contents && results.contents[i]) {
+                post.content = results.contents[i];
+            }
+            posts.push(post);
+        }
+        if (this.debug.enable && this.debug.saveResultToFiles) {
+            this._saveObjToFile(posts, `results-${posts.length}-resultToObjects.json`);
+        }
+        return posts;
+    }
+
+    /**
+    * Get hot boards of Ptt. (Here is a local json file which 
+    * may become outdated and will need to be updated manually from time to time.)
+    * @returns {Post[]} An array of Post objects.
+    */
+    getHotBoards(): HotBoard[] {
+        return hot;
     }
 }
 

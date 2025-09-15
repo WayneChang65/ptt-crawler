@@ -1,37 +1,33 @@
 
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { initialize, getResults, close } from '../ptt_crawler';
-import type { MergedPages } from '../ptt_crawler';
+import { initialize, getResults, close } from '../src/index';
+import type { MergedPages } from '../src/index';
 
-// Mock external dependencies - Same as OOP test
-vi.mock('puppeteer-extra', () => {
-    const mockPage = {
-        goto: vi.fn().mockResolvedValue(undefined),
-        $: vi.fn().mockResolvedValue({
-            click: vi.fn().mockResolvedValue(undefined),
-        }),
-        waitForNavigation: vi.fn().mockResolvedValue(undefined),
-        waitForSelector: vi.fn().mockResolvedValue(undefined),
-        evaluate: vi.fn(),
-        setDefaultNavigationTimeout: vi.fn(),
-        setRequestInterception: vi.fn(),
-        on: vi.fn(),
-        close: vi.fn().mockResolvedValue(undefined),
-        bringToFront: vi.fn().mockResolvedValue(undefined),
-    };
+// Mock external dependencies
+const mockPage = {
+    goto: vi.fn(),
+    $: vi.fn(),
+    waitForNavigation: vi.fn(),
+    waitForSelector: vi.fn(),
+    evaluate: vi.fn(),
+    setDefaultNavigationTimeout: vi.fn(),
+    setRequestInterception: vi.fn(),
+    on: vi.fn(),
+    close: vi.fn(),
+    bringToFront: vi.fn(),
+};
 
-    const mockBrowser = {
-        newPage: vi.fn().mockResolvedValue(mockPage),
-        close: vi.fn().mockResolvedValue(undefined),
-    };
+const mockBrowser = {
+    newPage: vi.fn().mockResolvedValue(mockPage),
+    close: vi.fn(),
+};
 
-    return {
-        default: {
-            use: vi.fn().mockReturnThis(),
-            launch: vi.fn().mockResolvedValue(mockBrowser),
-        },
-    };
-});
+vi.mock('puppeteer-extra', () => ({
+    default: {
+        use: vi.fn().mockReturnThis(),
+        launch: vi.fn().mockImplementation(async () => mockBrowser),
+    },
+}));
 
 vi.mock('is-docker', () => ({
     default: vi.fn().mockReturnValue(false),
@@ -47,21 +43,24 @@ vi.mock('@waynechang65/fml-consolelog', () => ({
     log: vi.fn(),
 }));
 
+// Mock the retry logic to execute immediately
+vi.mock('@lifeomic/attempt', () => ({
+    retry: vi.fn().mockImplementation(async (fn) => fn({})),
+}));
+
 // Import modules after mocking
 const puppeteer = (await import('puppeteer-extra')).default;
 const isInsideDocker = (await import('is-docker')).default;
 const os = (await import('os')).default;
 
 describe('PttCrawler - MOP Mock Test', () => {
-    // Helper to access mocked objects
-    const getMocks = async () => {
-        const browser = await puppeteer.launch();
-        const page = await browser.newPage();
-        return { browser, page };
-    };
-
     beforeEach(() => {
         vi.clearAllMocks();
+        // Reset mock implementations to a default successful state
+        vi.mocked(mockPage.goto).mockResolvedValue(undefined);
+        vi.mocked(mockPage.waitForSelector).mockResolvedValue(undefined);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        vi.mocked(puppeteer.launch).mockResolvedValue(mockBrowser as any);
     });
 
     // Crucial for resetting the singleton state between tests
@@ -71,9 +70,7 @@ describe('PttCrawler - MOP Mock Test', () => {
 
     describe('Function Flow', () => {
         it('should throw an error if getResults is called before initialize', async () => {
-            await expect(getResults()).rejects.toThrow(
-                'Crawler is not initialized. Please call init() first.'
-            );
+            await expect(getResults()).rejects.toThrow('Crawler is not initialized. Please call init() first.');
         });
 
         it('should initialize with correct options for non-linux OS', async () => {
@@ -93,8 +90,12 @@ describe('PttCrawler - MOP Mock Test', () => {
             });
         });
 
+        it('should throw an error if initialization fails', async () => {
+            vi.mocked(puppeteer.launch).mockRejectedValue(new Error('Launch failed'));
+            await expect(initialize()).rejects.toThrow('Launch failed');
+        });
+
         it('should crawl a single page after initialization', async () => {
-            const { page } = await getMocks();
             const mockPage1Data = {
                 aryTitle: ['[公告] 板規', '[閒聊] 今天天氣真好'],
                 aryHref: ['http://ptt.cc/post1', 'http://ptt.cc/post2'],
@@ -103,13 +104,13 @@ describe('PttCrawler - MOP Mock Test', () => {
                 aryDate: ['1/01', '8/19'],
                 aryMark: ['', ''],
             };
-            vi.mocked(page.evaluate).mockResolvedValue(mockPage1Data);
+            vi.mocked(mockPage.evaluate).mockResolvedValue(mockPage1Data);
 
             await initialize();
             const result = await getResults({ board: 'TestBoard', pages: 1 });
 
-            expect(page.goto).toHaveBeenCalledWith('https://www.ptt.cc/bbs/TestBoard/index.html', expect.any(Object));
-            
+            expect(mockPage.goto).toHaveBeenCalledWith('https://www.ptt.cc/bbs/TestBoard/index.html', expect.any(Object));
+
             const expected: MergedPages = {
                 titles: ['[閒聊] 今天天氣真好', '[公告] 板規'],
                 urls: ['http://ptt.cc/post2', 'http://ptt.cc/post1'],
@@ -122,7 +123,6 @@ describe('PttCrawler - MOP Mock Test', () => {
         });
 
         it('should crawl multiple pages correctly', async () => {
-            const { page } = await getMocks();
             const mockPage1Data = {
                 aryTitle: ['[公告] 板規', '[閒聊] 今天天氣真好'],
                 aryHref: ['http://ptt.cc/post1', 'http://ptt.cc/post2'],
@@ -140,10 +140,14 @@ describe('PttCrawler - MOP Mock Test', () => {
                 aryMark: ['M'],
             };
 
-            vi.mocked(page.evaluate)
-                .mockResolvedValueOnce(mockPage1Data)
-                .mockResolvedValueOnce(undefined) // For clicking 'previous page'
-                .mockResolvedValueOnce(mockPage2Data);
+            let scrapeCallCount = 0;
+            vi.mocked(mockPage.evaluate).mockImplementation(async (_fn, ...args) => {
+                if (args.length > 0) {
+                    scrapeCallCount++;
+                    return scrapeCallCount === 1 ? mockPage1Data : mockPage2Data;
+                }
+                return undefined;
+            });
 
             await initialize();
             const result = await getResults({ board: 'TestBoard', pages: 2 });
@@ -160,17 +164,14 @@ describe('PttCrawler - MOP Mock Test', () => {
         });
 
         it('should close the browser and reset the crawler instance', async () => {
-            const { browser } = await getMocks();
             await initialize();
-            expect(browser.close).not.toHaveBeenCalled();
+            expect(mockBrowser.close).not.toHaveBeenCalled();
 
             await close();
-            expect(browser.close).toHaveBeenCalled();
+            expect(mockBrowser.close).toHaveBeenCalled();
 
             // Verify that the instance is reset
-            await expect(getResults()).rejects.toThrow(
-                'Crawler is not initialized. Please call init() first.'
-            );
+            await expect(getResults()).rejects.toThrow('Crawler is not initialized. Please call init() first.');
         });
 
         it('should not throw an error if close is called without initialization', async () => {

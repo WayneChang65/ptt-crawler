@@ -1,0 +1,642 @@
+[
+  {
+    "name": "Gossiping",
+    "class": "綜合",
+    "title": "◎[八翻] 創站三十周年紀念日！！"
+  },
+  {
+    "name": "Stock",
+    "class": "學術",
+    "title": "◎[股票] 股票板"
+  },
+  {
+    "name": "C_Chat",
+    "class": "閒談",
+    "title": "◎[希洽] 鬼滅電影無限城篇熱映中"
+  },
+  {
+    "name": "Baseball",
+    "class": "棒球",
+    "title": "◎[棒球] 鄧愷威飆MLв生涯首先發勝！"
+  },
+  {
+    "name": "NBA",
+    "class": "NBA",
+    "title": "◎[NвA] 板主選舉投票中 投票拿P幣！"
+  },
+  {
+    "name": "HatePolitics",
+    "class": "Hate",
+    "title": "◎[政黑] 大什麼大都結束了"
+  },
+  {
+    "name": "Lifeismoney",
+    "class": "省錢",
+    "title": "◎[省錢] 省錢板"
+  },
+  {
+    "name": "LoL",
+    "class": "遊戲",
+    "title": "◎[LoL] KT/HLE/TSW確定進世界賽"
+  },
+  {
+    "name": "iOS",
+    "class": "系統",
+    "title": "◎[iOS] Apple Event September 10"
+  },
+  {
+    "name": "car",
+    "class": "車車",
+    "title": "◎[汽車] 恭喜111156k1529當選"
+  },
+  {
+    "name": "home-sale",
+    "class": "房屋",
+    "title": "◎[房版] 請詳閱新板規免違規"
+  },
+  {
+    "name": "KoreaStar",
+    "class": "韓國",
+    "title": "◎[韓星] 0913 崔然竣 HBD♥"
+  },
+  {
+    "name": "MobileComm",
+    "class": "資訊",
+    "title": "◎[通訊] 手機o平板o資費 請進！"
+  },
+  {
+    "name": "PC_Shopping",
+    "class": "硬體",
+    "title": "◎[電蝦] 5090 跩！跩！跩！"
+  },
+  {
+    "name": "Beauty",
+    "class": "聊天",
+    "title": "◎[表特] 貼AI圖 一律水桶+退文"
+  },
+  {
+    "name": "movie",
+    "class": "綜合",
+    "title": "◎[電影] 取消票房文規範"
+  },
+  {
+    "name": "Japan_Travel",
+    "class": "旅遊",
+    "title": "◎日本旅遊板"
+  },
+  {
+    "name": "sex",
+    "class": "男女",
+    "title": "◎[西斯] 愛對了人 情人節每天都過"
+  },
+  {
+    "name": "Tech_Job",
+    "class": "工作",
+    "title": "◎[科技] B0988698088水桶十年"
+  },
+  {
+    "name": "Steam",
+    "class": "平台",
+    "title": "◎本板禁止買賣合購代購代刷"
+  },
+  {
+    "name": "SportLottery",
+    "class": "博弈",
+    "title": "◎[運彩] 來都來了 就一起尻剛吧！"
+  },
+  {
+    "name": "creditcard",
+    "class": "理財",
+    "title": "◎[卡板]"
+  },
+  {
+    "name": "Military",
+    "class": "軍事",
+    "title": "◎[軍事] 理性討論軍事 請詳閱板規"
+  },
+  {
+    "name": "japanavgirls",
+    "class": "綜合",
+    "title": "◎AV女優板 清新、優質,神人照格式"
+  },
+  {
+    "name": "basketballTW",
+    "class": "籃球",
+    "title": "◎[台籃] 休賽季"
+  },
+  {
+    "name": "Marginalman",
+    "class": "心情",
+    "title": "◎[邊緣] 茅野愛衣生日快樂！！"
+  },
+  {
+    "name": "PlayStation",
+    "class": "主機",
+    "title": "◎[PS5] 9/19 空之軌跡 the 1st"
+  },
+  {
+    "name": "HardwareSale",
+    "class": "買賣",
+    "title": "◎[硬交] 詐騙會從內文+LINE找上門"
+  },
+  {
+    "name": "NSwitch",
+    "class": "主機",
+    "title": "◎[NS] Nintendo Direct 9/12 21:00"
+  },
+  {
+    "name": "KoreaDrama",
+    "class": "韓劇",
+    "title": "◎[韓劇]"
+  },
+  {
+    "name": "Tainan",
+    "class": "台南",
+    "title": "◎[台南]"
+  },
+  {
+    "name": "TaichungBun",
+    "class": "台中",
+    "title": "◎[台中] 發文前請先閱讀板規文摘"
+  },
+  {
+    "name": "MacShop",
+    "class": "資訊",
+    "title": "◎[麥蝦] 禁止販售非現貨商品"
+  },
+  {
+    "name": "Boy-Girl",
+    "class": "心情",
+    "title": "◎[男女] 歡迎光臨男女板"
+  },
+  {
+    "name": "Kaohsiung",
+    "class": "高雄",
+    "title": "◎[高雄] 翅膀硬惹"
+  },
+  {
+    "name": "AC_In",
+    "class": "閒談",
+    "title": "◎[裏洽]"
+  },
+  {
+    "name": "Elephants",
+    "class": "CPBL",
+    "title": "◎[兄弟] 2025『進化』B-EVOLUTION"
+  },
+  {
+    "name": "miHoYo",
+    "class": "米哈",
+    "title": "◎[米哈遊] 丹恆·薩菀免費送！"
+  },
+  {
+    "name": "BabyMother",
+    "class": "家庭",
+    "title": "◎[寶寶] 記得打流感疫苗"
+  },
+  {
+    "name": "CFantasy",
+    "class": "玄幻",
+    "title": "◎[玄幻] 玄幻小說板"
+  },
+  {
+    "name": "Gamesale",
+    "class": "綜合",
+    "title": "◎[GS] 遊戲交易板"
+  },
+  {
+    "name": "EAseries",
+    "class": "歐美",
+    "title": "◎[EA] 歐美影集版"
+  },
+  {
+    "name": "biker",
+    "class": "車車",
+    "title": "◎[機車] 光陽和他的網軍"
+  },
+  {
+    "name": "CheerGirlsTW",
+    "class": "應援",
+    "title": "◎[真香] 阿金請勿發表不當言論"
+  },
+  {
+    "name": "China-Drama",
+    "class": "中劇",
+    "title": "◎[中劇] 讓空降來得更猛烈些吧！"
+  },
+  {
+    "name": "e-coupon",
+    "class": "理財",
+    "title": "◎新板主2025年4月25日上任"
+  },
+  {
+    "name": "mobilesales",
+    "class": "資訊",
+    "title": "◎[Mobile] 板規不看，水桶就來"
+  },
+  {
+    "name": "Aviation",
+    "class": "交通",
+    "title": "◎[航空] 注意行動電源上機新規定"
+  },
+  {
+    "name": "WomenTalk",
+    "class": "聊天",
+    "title": "◎[女孩] 天氣熱小心ㄐㄅ(<(@@)/"
+  },
+  {
+    "name": "CarShop",
+    "class": "買賣",
+    "title": "◎請先看板規再發文"
+  },
+  {
+    "name": "CVS",
+    "class": "資訊",
+    "title": "◎[CVS] 超商店員a.k.a.superman"
+  },
+  {
+    "name": "Drama-Ticket",
+    "class": "舞臺",
+    "title": "◎藝文票券轉售板 禁止徵票小心詐騙"
+  },
+  {
+    "name": "FORMULA1",
+    "class": "賽車",
+    "title": "◎F1板"
+  },
+  {
+    "name": "Japandrama",
+    "class": "日劇",
+    "title": "◎[日劇] 木22 北村有起哉"
+  },
+  {
+    "name": "AllTogether",
+    "class": "聯誼",
+    "title": "◎[歐兔] 寄出代表愛的明信片"
+  },
+  {
+    "name": "marriage",
+    "class": "婚姻",
+    "title": "◎[婚姻] 歡迎光臨婚姻板"
+  },
+  {
+    "name": "Hsinchu",
+    "class": "新竹",
+    "title": "◎[新竹] 新版規研議中~~\\⊙▽⊙/"
+  },
+  {
+    "name": "joke",
+    "class": "娛樂",
+    "title": "◎[就可] 會飛的印度人好可怕"
+  },
+  {
+    "name": "Soft_Job",
+    "class": "工作",
+    "title": "◎[軟工] 成為全宇宙のNo.1吧"
+  },
+  {
+    "name": "watch",
+    "class": "購一",
+    "title": "◎[錶板] Show me your Watch!"
+  },
+  {
+    "name": "MLB",
+    "class": "#MLB",
+    "title": "◎[MLB] 2025賽季進行中"
+  },
+  {
+    "name": "DSLR",
+    "class": "攝影",
+    "title": "◎[攝影] 2025"
+  },
+  {
+    "name": "Lakers",
+    "class": "W-PA",
+    "title": "◎[Lakers] Offseason"
+  },
+  {
+    "name": "e-shopping",
+    "class": "網購",
+    "title": "◎[ＥＳ] 注意板規 遠離水桶"
+  },
+  {
+    "name": "DC_SALE",
+    "class": "攝影",
+    "title": "◎詐騙請去至底文回覆"
+  },
+  {
+    "name": "FAPL",
+    "class": "聯賽",
+    "title": "◎歡樂・三喵・足球"
+  },
+  {
+    "name": "marvel",
+    "class": "生二",
+    "title": "◎[媽佛] 你吃了誰煮的麵"
+  },
+  {
+    "name": "PathofExile",
+    "class": "線上",
+    "title": "◎[PoE] 流亡黯道二代 啟動！"
+  },
+  {
+    "name": "MuscleBeach",
+    "class": "美體",
+    "title": "◎[健身] 發文前請務必詳閱板規"
+  },
+  {
+    "name": "ONE_PIECE",
+    "class": "日本",
+    "title": "◎[海賊王] 1157 \"傳說的酒吧\""
+  },
+  {
+    "name": "TY_Research",
+    "class": "大氣",
+    "title": "◎板聚進行中！會議連結見置底"
+  },
+  {
+    "name": "E-appliance",
+    "class": "資訊",
+    "title": "◎[家電] 發文請照規定發文"
+  },
+  {
+    "name": "WOW",
+    "class": "線上",
+    "title": "◎[WoW] 11.2法力熔爐 \\\\\\Liquid///"
+  },
+  {
+    "name": "NY-Yankees",
+    "class": "AL-E",
+    "title": "◎NYY - 持續大低潮中"
+  },
+  {
+    "name": "Bank_Service",
+    "class": "銀行",
+    "title": "◎[銀行服務] 花旗二信金融卡 XD"
+  },
+  {
+    "name": "NFL",
+    "class": "美足",
+    "title": "◎Overreaction Time"
+  },
+  {
+    "name": "PuzzleDragon",
+    "class": "轉珠",
+    "title": "◎[P&D] 剛吼合作 / 新12億關卡"
+  },
+  {
+    "name": "PokemonGO",
+    "class": "抓寶",
+    "title": "◎[PMGO] 9/16-21 超能力週：估領"
+  },
+  {
+    "name": "KR_Entertain",
+    "class": "綜藝",
+    "title": "◎[韓綜] Show Me The 新板主！"
+  },
+  {
+    "name": "Lions",
+    "class": "CPBL",
+    "title": "◎[獅隊]9.13-14 UG女孩主題日@新莊"
+  },
+  {
+    "name": "SakaTalk",
+    "class": "日本",
+    "title": "◎坂道閒聊板"
+  },
+  {
+    "name": "Hearthstone",
+    "class": "線上",
+    "title": "◎[爐石] 2025 夏季冠軍賽 開打了"
+  },
+  {
+    "name": "give",
+    "class": "贈送",
+    "title": "◎[贈送] 標題不合置底文規定 刪"
+  },
+  {
+    "name": "Tennis",
+    "class": "網球",
+    "title": "◎[網球] 辛卡辛卡 CoGa芭"
+  },
+  {
+    "name": "fastfood",
+    "class": "美食",
+    "title": "◎[速食] 慟!麥香魚起士只放半片"
+  },
+  {
+    "name": "Headphone",
+    "class": "資訊",
+    "title": "◎[耳機] 歡迎大家多多心得~"
+  },
+  {
+    "name": "BabyProducts",
+    "class": "買賣",
+    "title": "◎防詐騙,交易異常時,自行找客服"
+  },
+  {
+    "name": "Audiophile",
+    "class": "資訊",
+    "title": "◎[喇叭] 注意 Line 加好友詐騙"
+  },
+  {
+    "name": "Wanted",
+    "class": "徵求",
+    "title": "◎[汪踢] 今天,你想做什麼呢？"
+  },
+  {
+    "name": "bicycle",
+    "class": "車車",
+    "title": "◎[單車] 大家來看環台賽吧！"
+  },
+  {
+    "name": "SuperBike",
+    "class": "車車",
+    "title": "◎PTT重機板 ~ 發買賣文請詳閱置底"
+  },
+  {
+    "name": "DigiCurrency",
+    "class": "資訊",
+    "title": "◎[數位貨幣] BTC made in USA"
+  },
+  {
+    "name": "Guardians",
+    "class": "CPBL",
+    "title": "◎[悍將] 富邦不能沒有蝦"
+  },
+  {
+    "name": "YuanChuang",
+    "class": "原創",
+    "title": "◎[原創] 徵文：曬寶賽 我最搶戲"
+  },
+  {
+    "name": "Road_Running",
+    "class": "跑步",
+    "title": "◎跑步版-天氣熱多喝水"
+  },
+  {
+    "name": "DIABLO",
+    "class": "線上",
+    "title": "◎[暗黑] D2R 正夯"
+  },
+  {
+    "name": "part-time",
+    "class": "求職",
+    "title": "◎[打工] 114/01/01起 工資 190/hr"
+  },
+  {
+    "name": "nb-shopping",
+    "class": "硬體",
+    "title": "◎[筆電蝦]"
+  },
+  {
+    "name": "Monkeys",
+    "class": "CPBL",
+    "title": "◎[桃猿] SINGDOME連勝 阿飛三分砲!"
+  },
+  {
+    "name": "MRT",
+    "class": "交通",
+    "title": "◎[捷運] A7鬧擁擠 一班車載完..."
+  },
+  {
+    "name": "Coffee",
+    "class": "咖啡",
+    "title": "◎咖啡 秋意漸濃"
+  },
+  {
+    "name": "Key_Mou_Pad",
+    "class": "生活",
+    "title": "◎[鍵鼠] 網軍清明連假都耍加班的嗎"
+  },
+  {
+    "name": "MobilePay",
+    "class": "理財",
+    "title": "◎刷卡回饋問題請至信用卡板"
+  },
+  {
+    "name": "ALLPOST",
+    "class": "文章",
+    "title": "◎跨板式Local新文章"
+  },
+  {
+    "name": "TW_Entertain",
+    "class": "綜藝",
+    "title": "◎[台綜] 恭喜LULU,漢典"
+  },
+  {
+    "name": "PublicServan",
+    "class": "公職",
+    "title": "◎[公職]"
+  },
+  {
+    "name": "TaiwanDrama",
+    "class": "臺劇",
+    "title": "◎[臺劇] 二代咖啡館的化外之人"
+  },
+  {
+    "name": "Badminton",
+    "class": "羽球",
+    "title": "◎[羽球版]"
+  },
+  {
+    "name": "FATE_GO",
+    "class": "手遊",
+    "title": "◎[FGO] 日 宇宙神遊還是宇宙神遊"
+  },
+  {
+    "name": "ToS",
+    "class": "轉珠",
+    "title": "◎[神魔] 與丁頓強"
+  },
+  {
+    "name": "points",
+    "class": "旅遊",
+    "title": "◎點數哩程板 交易文發文請看板規"
+  },
+  {
+    "name": "BeautySalon",
+    "class": "美容",
+    "title": "◎[美保] 禁止洗文章數"
+  },
+  {
+    "name": "Foreign_Inv",
+    "class": "理財",
+    "title": "◎海外投資板"
+  },
+  {
+    "name": "H-GAME",
+    "class": "綜合",
+    "title": "◎H-GAME板"
+  },
+  {
+    "name": "Keelung",
+    "class": "基隆",
+    "title": "◎[基隆] 新版規已公布！"
+  },
+  {
+    "name": "Teacher",
+    "class": "教師",
+    "title": "◎[陽春] 通往開學的倒數計時"
+  },
+  {
+    "name": "Taoyuan",
+    "class": "桃園",
+    "title": "◎[桃園]"
+  },
+  {
+    "name": "Railway",
+    "class": "交通",
+    "title": "◎[鐵道] 高鐵何時才會買夠車"
+  },
+  {
+    "name": "Tobacco",
+    "class": "生一",
+    "title": "◎不是過了就可以上架 不是這樣喔"
+  },
+  {
+    "name": "ManUtd",
+    "class": "#ENG",
+    "title": "◎Manchester United"
+  },
+  {
+    "name": "DMM_GAMES",
+    "class": "遊戲",
+    "title": "◎[DMMG] 日幣匯率低 課金好時機"
+  },
+  {
+    "name": "MakeUp",
+    "class": "美容",
+    "title": "◎[美妝] 夏天!不葉配 不脫妝"
+  },
+  {
+    "name": "Hinatazaka46",
+    "class": "日本",
+    "title": "◎日向坂46 お願いバッハ！"
+  },
+  {
+    "name": "MH",
+    "class": "狩獵",
+    "title": "◎[MH] MHWilds 2025/2/28 狩獵解禁"
+  },
+  {
+    "name": "CFP",
+    "class": "理財",
+    "title": "◎理財規劃板-置底可以推薦優文"
+  },
+  {
+    "name": "Food",
+    "class": "美食",
+    "title": "◎美食板"
+  },
+  {
+    "name": "Leo",
+    "class": "星座",
+    "title": "◎[獅子]看到的堅強 是用倔強在偽裝"
+  },
+  {
+    "name": "TypeMoon",
+    "class": "型月",
+    "title": "◎[F/GO] Animal Friendly Ark"
+  }
+]
