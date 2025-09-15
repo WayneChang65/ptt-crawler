@@ -116,14 +116,11 @@ This module is optimized for Linux, including Docker
       // *** Initialize *** 
       // concurrency: 並行數量 (預設 5)
       // concurrency: The number of concurrent requests (default: 5)
-      // debug: 開啟/設定除錯選項 (預設 false)
-      // debug: Enable/configure debug options (default: false)
       // retry: 開啟/設定重試選項 (預設 delay: 2000, maxAttempts: 10)
       // retry: Enable/configure retry options (default: delay: 2000, 
       //        maxAttempts: 10)
       await pttCrawler.init({
           concurrency: 5,
-          debug: { enable: true, printRetryInfo: true },
           retry: { delay: 2000, maxAttempts: 10 }
       });
 
@@ -149,8 +146,7 @@ This module is optimized for Linux, including Docker
   }
   ```
 
-* 爬完的資料會透過函式 `crawl()` 回傳一個物件，裏面各陣列放著爬完的資料，  
-  結構如下：  
+* 爬完的資料會透過函式 `crawl()` 回傳一個物件，裏面各陣列放著爬完的資料，結構如下：  
   The `crawl()` function returns an object containing
   the scraped data, with the structure shown below.  
 
@@ -251,14 +247,12 @@ npm run test:e2e
 
 ## 基本方法 (Base Methods)  
 
-* `new PttCrawler(options)`: 建立一個爬蟲實例 (create a crawler instance).  
-  * `options`: Puppeteer 的 `LaunchOptions` 物件，可用來客製化瀏覽器行為  
-    (Puppeteer's `LaunchOptions` object to customize browser behavior).
- See more details
- from [Puppeteer API](https://pptr.dev/api/puppeteer.launchoptions).  
+* `new PttCrawler(options: LaunchOptions)`: 建立一個爬蟲實例 (create a instance).  
+  * `options`: Puppeteer 的 `LaunchOptions` 物件，可用來客製化瀏覽器行為。  
+    (Puppeteer's `LaunchOptions` object to customize browser behavior).  
 
-* `init(options)`: 初始化爬蟲 (initialize the crawler).  
-  * `options`:  
+* `init(initOption: InitOptions)`: 初始化爬蟲 (initialize the crawler).  
+  * `initOption`:  
     * `concurrency` (number): 爬取內文時的併發數量。基本上，併發的設定越高，
 資料爬取時所使用的平行處理就會越多。理論上，這應該能提升效率並縮短完成時間。然而，
 如果併發數值設定得太高，而電腦的處理能力又有限，效率可能不僅無法顯著提升，
@@ -297,7 +291,7 @@ resources. **Default: `5`**.
       * `maxAttempts` (number): 最大重試次數。**預設值: `10`**。  
         The maximum number of attempts. **Default: `10`**.  
 
-* `crawl(options)`: 開始爬資料 (start to scrape data).  
+* `crawl(options: CrawlerOptions)`: 開始爬資料 (start to scrape data).  
   * `options`:  
     * `board` (string): 欲爬的 PTT 版名。**預設值: `'Tos'`**。  
       The name of the PTT board to crawl. **Default: `'Tos'`**.  
@@ -325,7 +319,7 @@ resources. **Default: `5`**.
     ```typescript
     interface HotBoard {
       name: string;    // 看板名稱 (board name)
-      class: string;   // 分類 (category)
+      class: string;   // 分類 (class)
       title: string;   // 標題 (title)
     }
     ```  
