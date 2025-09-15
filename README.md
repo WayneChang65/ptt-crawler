@@ -319,6 +319,28 @@ resources. **Default: `5`**.
  (The `MergedPages` object returned from the `crawl()` method).
   * **Returns:** `Post[]` - `Post` 物件的陣列 (An array of `Post` objects).
 
+* `getHotBoards()`: 取得 PTT 熱門看板列表 (get the list of hot boards on PTT).
+  * **Returns:** `HotBoard[]` - `HotBoard` 物件的陣列 (An array of `HotBoard` objects).
+
+    ```typescript
+    interface HotBoard {
+      name: string;    // 看板名稱 (board name)
+      class: string;   // 分類 (category)
+      title: string;   // 標題 (title)
+    }
+    ```  
+
+  * 這個熱門看版並非即時爬取，只是透過JSON的方式儲存，隨時間可能內容會有差異。
+不過，熱門看板變化性不高，加上入板的最後幾名人氣也相對很低，所以短時間更新也沒必要了。
+這函式功能，主要是讓未來可能被利用為MCP server做準備，一般使用者會用到機率相對也不會太高。  
+This list of popular boards is not scraped in real-time; it is simply
+ stored as a JSON file. Consequently, the content may become outdated
+ over time. However, the list of popular boards is relatively stable.
+ Furthermore, the last few entries on the list have comparatively low
+ popularity, so frequent updates are unnecessary. The main purpose of
+ this function is to prepare for its potential future use as an MCP server;
+ the likelihood of it being used by a general user is also quite low.
+
 ## 錯誤處理 (Error Handling)  
 
 在使用 `crawl()` 函式時，建議使用 `try...catch` 區塊包覆，

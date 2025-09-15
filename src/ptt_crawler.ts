@@ -7,6 +7,7 @@ import { log as fmlog } from '@waynechang65/fml-consolelog';
 import isInsideDocker from 'is-docker';
 import * as fs from 'fs/promises';
 import { retry, AttemptOptions } from '@lifeomic/attempt';
+import hot from './hot.json' with { type: 'json' };
 
 puppeteer.use(StealthPlugin());
 
@@ -109,14 +110,36 @@ export interface MergedPages {
     contents?: string[];
 }
 
+/**
+ * Represents a single PTT post.
+ */
 export interface Post {
+    /** The title of the post. */
     title: string;
+    /** The URL of the post. */
     url: string;
+    /** The recommendation count (推文數). */
     rate: string;
+    /** The author of the post. */
     author: string;
+    /** The date of the post. */
     date: string;
+    /** The mark of the post (e.g., 'M', 'S'). */
     mark: string;
+    /** The full content of the post, including comments. Only available if `getContents` is true. */
     content?: string;
+}
+
+/**
+ * Represents a hot board on PTT.
+ */
+export interface HotBoard {
+    /** The name of the board (e.g., 'Gossiping'). */
+    name: string;
+    /** The classification of the board (e.g., '綜合', '學術'). */
+    class: string;
+    /** The title of the board (e.g., '[八卦]', '[股票]'). */
+    title: string;
 }
 
 /**
@@ -177,7 +200,7 @@ export class PttCrawler {
                     insideDocker ? '[ Inside a container ]' : '[ Not inside a container ]',
                 ]);
             }
-            const defaultLaunchOpts: LaunchOptions =
+            const defaultLaunchOpts: LaunchOptions = 
                 this.this_os === 'linux'
                     ? {
                           headless: true,
@@ -552,6 +575,15 @@ export class PttCrawler {
             this._saveObjToFile(posts, `results-${posts.length}-resultToObjects.json`);
         }
         return posts;
+    }
+
+    /**
+    * Get hot boards of Ptt. (Here is a local json file which 
+    * may become outdated and will need to be updated manually from time to time.)
+    * @returns {Post[]} An array of Post objects.
+    */
+    getHotBoards(): HotBoard[] {
+        return hot;
     }
 }
 

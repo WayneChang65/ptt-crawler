@@ -1,6 +1,7 @@
 
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { PttCrawler, type MergedPages, type Post } from '../src/index';
+import hot from '../src/hot.json';
 
 // Mock external dependencies
 const mockPage = {
@@ -342,6 +343,13 @@ describe('PttCrawler - Mock Test', () => {
         it('should not throw an error if close is called without init', async () => {
             const uninitializedCrawler = new PttCrawler();
             await expect(uninitializedCrawler.close()).resolves.not.toThrow();
+        });
+    });
+
+    describe('getHotBoards', () => {
+        it('should return the hot boards from the local json file', () => {
+            const hotBoards = crawler.getHotBoards();
+            expect(hotBoards).toEqual(hot);
         });
     });
 });
