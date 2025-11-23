@@ -13,17 +13,17 @@
 
 > [!IMPORTANT]  
 > :thumbsup: `3.1.0 版本`，利用非同步並發處理，爬取內文效率大增，依照測試結果，**時間可減少81%以上**。
- [(Benchmark)](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/benchmark.md)  
+ [(Benchmark)](https://github.com/WayneChang65/ptt-crawler/blob/master/benchmark/benchmark.md)  
 > `Version 3.1.0`: Utilizes asynchronous concurrent processing to
  significantly boost content crawling efficiency, **reducing
  processing time by over 81% according to our benchmark results**.
- [(Benchmark)](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/benchmark.md)  
+ [(Benchmark)](https://github.com/WayneChang65/ptt-crawler/blob/master/benchmark/benchmark.md)  
 > :thumbsup: `3.0.1 版本`，利用並發處理，爬取內文效率大增，依照測試結果，**時間可減少77%以上**。
- [(Benchmark)](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/benchmark.md)  
+ [(Benchmark)](https://github.com/WayneChang65/ptt-crawler/blob/master/benchmark/benchmark.md)  
 > `Version 3.0.1`: Utilizes concurrent processing to significantly
  boost content crawling efficiency, **reducing processing time by
  over 77% according to our benchmark results**.  
- [(Benchmark)](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/benchmark.md)  
+ [(Benchmark)](https://github.com/WayneChang65/ptt-crawler/blob/master/benchmark/benchmark.md)  
 > :bookmark: `3.x.x 版本`，主要利用「物件導向類別」進行使用，仍保留原本
 2.x.x版本的模組函式呼叫介面(如：initialize(), getResults(),...)。
 但是，**預計在4.0.0以後的版本，把原2.x.x版本函式(Deprecated)刪除，請留意！！！**  
@@ -211,9 +211,9 @@ This module is optimized for Linux, including Docker
   npm install
   ```
 
-* 透過 npm 直接使用以下指令。(實際範例程式在  ./src/examples/demo.ts or demo.cjs)  
+* 透過 npm 直接使用以下指令。(實際範例程式在  ./examples/demo.ts or demo.cjs)  
   Run it with npm. (the demo example is
-  in  ./src/examples/demo.ts or demo.cjs)  
+  in  ./examples/demo.ts or demo.cjs)  
 
   ```bash
   # for ts
