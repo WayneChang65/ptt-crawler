@@ -1,10 +1,10 @@
 # Benchmark
 
-| 版本 (Ver.)     | 特徵 (Feat.) | 測試檔案 (Test File) | 測試時間 (Duration) | 備註 (Notes) |
-|----------|------|----------|----------| --------- |
-| v3.1.0  | 有並發 (w/ Concurrency) | [demo-v3.0.1.cjs](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/demo-v3.1.0.cjs) | 3.4s, 14s, **1m25.7s** | 分頁非同步 (Pages Asynchronous) |
-| v3.0.1  | 有並發 (w/ Concurrency) | [demo-v3.0.1.cjs](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/demo-v3.0.1.cjs) | 4.9s, 19.4s, **1m42.7s** | 分頁以同步 (Pages Synchronous) |
-| v2.7.2  | 無並發 (w/o Concurrency) | [demo-v2.7.2.cjs](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/demo-v2.7.2.cjs) | 4.2s, 1m19.4s, **7m36.9s** | 略 (N/A) |
+|版本 (Ver.)|特徵 (Feat.)|測試檔案 (Test File)|測試時間 (Duration)|備註 (Notes)|
+|----------|------|----------|----------|---------|
+|v3.1.0|有並發 (w/ Concurrency)|[demo-v3.0.1.cjs](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/demo-v3.1.0.cjs)|3.4s, 14s, **1m25.7s**|分頁非同步 (Pages Asynchronous)|
+|v3.0.1|有並發 (w/ Concurrency)|[demo-v3.0.1.cjs](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/demo-v3.0.1.cjs)|4.9s, 19.4s, **1m42.7s**|分頁以同步 (Pages Synchronous)|
+|v2.7.2|無並發 (w/o Concurrency)|[demo-v2.7.2.cjs](https://github.com/WayneChang65/ptt-crawler/blob/master/src/benchmark/demo-v2.7.2.cjs)|4.2s, 1m19.4s, **7m36.9s**|略 (N/A)|
 
 ## 測試條件 (Test Condition)  
 
