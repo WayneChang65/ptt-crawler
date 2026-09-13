@@ -1,6 +1,6 @@
 {
     "name": "@waynechang65/ptt-crawler",
-    "version": "3.1.2",
+    "version": "3.1.3",
     "description": "A web crawler module designed to scarp data from Ptt.",
     "type": "module",
     "main": "dist/index.js",
@@ -56,7 +56,7 @@
         "@lifeomic/attempt": "^3.1.0",
         "@waynechang65/fml-consolelog": "^1.2.2",
         "is-docker": "^3.0.0",
-        "puppeteer": "^24.15.0",
+        "puppeteer": "^25.10.0",
         "puppeteer-extra": "^3.3.6",
         "puppeteer-extra-plugin-stealth": "^2.11.2"
     },
@@ -68,17 +68,18 @@
         "eslint": "^9.35.0",
         "eslint-config-prettier": "^10.1.5",
         "globals": "^16.4.0",
-        "pixl-cli": "^1.0.21",
+        "pixl-cli": "^1.0.22",
         "prettier": "^3.6.2",
         "pretty-ms": "^9.2.0",
         "tsx": "^4.20.3",
         "typescript": "^5.8.3",
         "typescript-eslint": "^8.43.0",
-        "vitest": "^3.2.4"
+        "vitest": "^4.1.11"
     },
-    "overrides": {
-        "vitest": {
-            "rollup": "npm:@rollup/wasm-node"
-        }
+    "allowScripts": {
+        "puppeteer@25.10.0": true,
+        "esbuild@0.25.9": true,
+        "esbuild@0.28.2": true,
+        "fsevents@2.3.3": true
     }
 }
