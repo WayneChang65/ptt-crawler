@@ -76,6 +76,8 @@ This module relies on Puppeteer. On the first installation or
  execution, it will automatically download a compatible Chromium
  browser (around 170-250MB), so the initial setup might take
  several minutes.
+* 需要 **Node.js ≥ 22.12.0**（由 Puppeteer 25 要求）。  
+  Requires **Node.js >= 22.12.0** (required by Puppeteer 25).  
 * 本模組已針對 Linux (包含 Docker 環境) 進行優化，
  會自動偵測並設定合適的瀏覽器啟動參數。  
 This module is optimized for Linux, including Docker
